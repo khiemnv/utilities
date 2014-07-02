@@ -1,0 +1,13 @@
+//////////////////////////////////////////////////////////////////////////
+// Ham Detect PEinject
+// Neu nghi ngo lay file: 1 (PEINJECT)
+// Neu khong nghi ngo: 0 (NOTPEINJECT)
+//////////////////////////////////////////////////////////////////////////
+#include "stdafx.h"
+#define  PEINJECT 1
+#define  NOTPEINJECT 0
+
+int isPEinject(char *fName)
+{
+	return NOTPEINJECT;
+}

@@ -1,0 +1,11 @@
+path---:E:\
+SQTstates-: 1
+chua_phan_tich
+classifySpecies: 7
+overlay
+not_pe
+pe
+o1
+o2
+u1
+uu2

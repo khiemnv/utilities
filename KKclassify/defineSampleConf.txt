@@ -1,0 +1,12 @@
+n_record_: 1
+loai_vr__:kavo
+ten_file_:hers
+size_m_M_: 100 200
+n_section: 1
+name_____:.text
+size_____: 100
+md5______:abcdmaf
+n_start_c: 1
+offset___: 343
+hex_str__:acdc
+##########
