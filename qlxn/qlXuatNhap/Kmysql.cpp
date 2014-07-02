@@ -182,6 +182,7 @@ bool KMySQL::query(CString stmt_str)
 	wcstombs_s(&convertedCharsw, q, newsizew, stmt_str, _TRUNCATE );
 	
 	/*sprintf(sql,"%s\0\0",stmt_str);*/
+	/*bool	retval = mysql_query(mysql,q);*/
 	if (mysql_query(mysql,q))
 	{
 		/*sprintf(buffer, "Error: %s\n",mysql_error(mysql));*/
@@ -348,60 +349,11 @@ my_ulonglong KMySQL::insert_row(CString *_values,int number_fields){
 	size_t newsizew = (temp.GetLength() + 1)*2;
 	size_t convertedCharsw = 0;
 	wcstombs_s(&convertedCharsw, q, newsizew, temp, _TRUNCATE );
-	//wcstombs(q,temp,BUFF_LENGTH);
 
-	if (mysql_query(mysql, q)){
-		sprintf(buffer, "Error: %s\n",
-			mysql_error(mysql));
-		return 0;
-	}
-	else {
+	if (query(q))
 		return mysql_affected_rows(mysql);
-	}
-// 	if (query(q))
-// 		return mysql_affected_rows(mysql);
-// 	else
-// 		return 0;
-}
-my_ulonglong KMySQL::insert_row(CString _table,CString *_values,int number_fields){
-	char *q = buffer;
-	//INSERT INTO pet VALUES ('Puffball2'
-	//,'Diane2','hamster2','f','1999-03-30',NULL
-	//)
-	/*int temp = sprintf(q,"INSERT INTO %s VALUES (%s",table,_row[0]);*/
-	CString temp;
-	/*temp=CString("INSERT INTO ") + CString(table) + CString(" VALUES (") + _values[0];*/
-	temp.Format(_T("INSERT INTO %s VALUES("),_table);
-
-	int j;
-	for(j = 0; j < number_fields; j++)
-	{
-		if (_values[j].IsEmpty())
-			temp.Append(_T("NULL,"));
-		else
-			temp.AppendFormat(_T("'%s',"),_values[j]);		
-	}
-
-	temp.TrimRight(',');
-	temp.Append(_T(");"));
-
-	size_t newsizew = (temp.GetLength() + 1)*2;
-	size_t convertedCharsw = 0;
-	wcstombs_s(&convertedCharsw, q, newsizew, temp, _TRUNCATE );
-	//wcstombs(q,temp,BUFF_LENGTH);
-
-	if (mysql_query(mysql, q)){
-		sprintf(buffer, "Error: %s\n",
-			mysql_error(mysql));
+	else
 		return 0;
-	}
-	else {
-		return mysql_affected_rows(mysql);
-	}
-	// 	if (query(q))
-	// 		return mysql_affected_rows(mysql);
-	// 	else
-	// 		return 0;
 }
 /*show table content*/
 bool KMySQL::show_table(){

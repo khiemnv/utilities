@@ -9,20 +9,9 @@ nhap
 ton
 dot
 hang
-CREATE_TBL_: 4
-CREATE*TABLE*xuat*(*dot_nhap*INT,ms_hang*VARCHAR(50),*ngay_xuat*DATE,*so_luong_kgX*DOUBLE,*so_luong_cayX*INT,*don_giaX*DOUBLE,*thueX*FLOAT,*commentX*VARCHAR(200));
-CREATE*TABLE*nhap*(*dot_nhap*INT,ms_hang*VARCHAR(50),*so_luong_kgN*DOUBLE,*so_luong_cayN*INT,*don_giaN*DOUBLE,*thueN*FLOAT,*commentN*VARCHAR(200));
+N_QUERY____: 5
+CREATE*TABLE*xuat*(ms_hang*VARCHAR(50),*so_luong_kgX*DOUBLE,*dot_nhap*INT,*so_luong_cayX*INT,*don_giaX*DOUBLE,*thueX*FLOAT,*ngay_xuat*DATE,*commentX*VARCHAR(200));
+CREATE*TABLE*nhap*(ms_hang*VARCHAR(50),*so_luong_kgN*DOUBLE,*dot_nhap*INT,*so_luong_cayN*INT,*don_giaN*DOUBLE,*thueN*FLOAT,*commentN*VARCHAR(200));
+CREATE*TABLE*ton*(ms_hang*VARCHAR(50),*so_luong_kgT*DOUBLE,*dot_nhap*INT,*so_luong_cayT*INT,*don_giaT*DOUBLE,*commentT*VARCHAR(200));
 CREATE*TABLE*dot(dot_nhap*INT,ms_chung_tu*VARCHAR(50),ngay_nhap*DATE,commentD*VARCHAR(200));
-CREATE*TABLE*hang(ms_hang*VARCHAR(50),ten_hang*VARCHAR(200),commentH*VARCHAR(200));
-ALTER_TBL_: 8
-ALTER*TABLE*dot*ADD*PRIMARY*KEY*(dot_nhap);
-ALTER*TABLE*hang*ADD*PRIMARY*KEY*(ms_hang);
-
-ALTER*TABLE*nhap*ADD*FOREIGN*KEY*(ms_hang)*REFERENCES*hang(ms_hang)*ON*DELETE*CASCADE;
-ALTER*TABLE*nhap*ADD*FOREIGN*KEY*(dot_nhap)*REFERENCES*dot(dot_nhap)*ON*DELETE*CASCADE;
-
-ALTER*TABLE*xuat*ADD*FOREIGN*KEY*(ms_hang)*REFERENCES*hang(ms_hang)*ON*DELETE*CASCADE;
-ALTER*TABLE*xuat*ADD*FOREIGN*KEY*(dot_nhap)*REFERENCES*dot(dot_nhap)*ON*DELETE*CASCADE;
-
-ALTER*TABLE*nhap*MODIFY*so_luong_kgN*INT*NOT*NULL;
-ALTER*TABLE*xuat*MODIFY*so_luong_kgX*INT*NOT*NULL;
+CREATE*TABLE*hang(dot_nhap*INT,ms_hang*VARCHAR(50),ten_hang*VARCHAR(200),commentH*VARCHAR(200));

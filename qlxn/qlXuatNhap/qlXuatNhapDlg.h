@@ -1,20 +1,23 @@
-// qlXuatNhapDlg.h : header file
+// QLXuatNhapDlg.h : header file
 //
 
 #pragma once
 #include "afxcmn.h"
-#include "inputdlg.h"
-#include "cusquerydlg.h"
-//#include "kmysql.h"
+#include "dotdlg.h"
+#include "nhapdlg.h"
+#include "tenhangdlg.h"
+#include "tondlg.h"
+#include "xuatdlg.h"
+#include "alldlg.h"
+/*#include "kmysql.h"*/
 
-#define CONF_FILE	"config.txt"
-#define COMMENT_LEN 12
-// CqlXuatNhapDlg dialog
-class CqlXuatNhapDlg : public CDialog
+
+// CQLXuatNhapDlg dialog
+class CQLXuatNhapDlg : public CDialog
 {
 // Construction
 public:
-	CqlXuatNhapDlg(CWnd* pParent = NULL);	// standard constructor
+	CQLXuatNhapDlg(CWnd* pParent = NULL);	// standard constructor
 
 // Dialog Data
 	enum { IDD = IDD_QLXUATNHAP_DIALOG };
@@ -29,22 +32,40 @@ protected:
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
-	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
-	afx_msg void OnPaint();
-	afx_msg HCURSOR OnQueryDragIcon();
+//	afx_msg void OnPaint();
+//	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	CTabCtrl m_mainTab;
-	InputDlg m_dotTab;
-	InputDlg m_hangTab;
-	afx_msg void OnTcnSelchangeMainTab(NMHDR *pNMHDR, LRESULT *pResult);
-	int curTabSel;
+	void initTabs(void);
+	CTabCtrl m_cTabMain;
+	CAllDlg* m_cDotTab;
+	CAllDlg* m_cNhapTab;
+	CAllDlg* m_cTenHangTab;
+	CAllDlg* m_cTonTab;
+	CAllDlg* m_cXuatTab;
+private:
+	int curTab;
+	// show and hide tabs when current tab sel change
+	void showHideTabs(void);
+public:
+	// //selected tab sel
+	int curSel;
+	afx_msg void OnTcnSelchangeTabMain(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	int resize(void);
-	KMySQL m_kmysql;
-	InputDlg m_nhapTab;
-	InputDlg m_xuatTab;
-	InputDlg m_tonTab;
+private:
+	// resize all tabs
+	void resize(void);
+	bool resize(int cx, int cy);
+public:
+	CAllDlg* m_cAllTab;
+	KMySQL m_cMySql;
+	afx_msg void OnClose();
+	void show_error_msgbox(CString error_msg);
 	bool init_database(void);
-	CCusQueryDlg m_cusQTab;
+	afx_msg void OnPaint();
+	afx_msg void OnFileExit();
+	afx_msg void OnOptionAddmode();
+	afx_msg void OnOptionEditmode();
+	afx_msg void OnOptionRemovemode();
+	void change_tabsMode(int mode);
 };

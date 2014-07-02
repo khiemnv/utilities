@@ -1,40 +1,40 @@
 ================================================================================
-    MICROSOFT FOUNDATION CLASS LIBRARY : qlXuatNhap Project Overview
+    MICROSOFT FOUNDATION CLASS LIBRARY : QLXuatNhap Project Overview
 ===============================================================================
 
-The application wizard has created this qlXuatNhap application for
+The application wizard has created this QLXuatNhap application for
 you.  This application not only demonstrates the basics of using the Microsoft
 Foundation Classes but is also a starting point for writing your application.
 
 This file contains a summary of what you will find in each of the files that
-make up your qlXuatNhap application.
+make up your QLXuatNhap application.
 
-qlXuatNhap.vcproj
+QLXuatNhap.vcproj
     This is the main project file for VC++ projects generated using an application wizard.
     It contains information about the version of Visual C++ that generated the file, and
     information about the platforms, configurations, and project features selected with the
     application wizard.
 
-qlXuatNhap.h
+QLXuatNhap.h
     This is the main header file for the application.  It includes other
     project specific headers (including Resource.h) and declares the
-    CqlXuatNhapApp application class.
+    CQLXuatNhapApp application class.
 
-qlXuatNhap.cpp
+QLXuatNhap.cpp
     This is the main application source file that contains the application
-    class CqlXuatNhapApp.
+    class CQLXuatNhapApp.
 
-qlXuatNhap.rc
+QLXuatNhap.rc
     This is a listing of all of the Microsoft Windows resources that the
     program uses.  It includes the icons, bitmaps, and cursors that are stored
     in the RES subdirectory.  This file can be directly edited in Microsoft
     Visual C++. Your project resources are in 1033.
 
-res\qlXuatNhap.ico
+res\QLXuatNhap.ico
     This is an icon file, which is used as the application's icon.  This
-    icon is included by the main resource file qlXuatNhap.rc.
+    icon is included by the main resource file QLXuatNhap.rc.
 
-res\qlXuatNhap.rc2
+res\QLXuatNhap.rc2
     This file contains resources that are not edited by Microsoft
     Visual C++. You should place all resources not editable by
     the resource editor in this file.
@@ -44,10 +44,10 @@ res\qlXuatNhap.rc2
 
 The application wizard creates one dialog class:
 
-qlXuatNhapDlg.h, qlXuatNhapDlg.cpp - the dialog
-    These files contain your CqlXuatNhapDlg class.  This class defines
+QLXuatNhapDlg.h, QLXuatNhapDlg.cpp - the dialog
+    These files contain your CQLXuatNhapDlg class.  This class defines
     the behavior of your application's main dialog.  The dialog's template is
-    in qlXuatNhap.rc, which can be edited in Microsoft Visual C++.
+    in QLXuatNhap.rc, which can be edited in Microsoft Visual C++.
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -63,13 +63,13 @@ Other standard files:
 
 StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file
-    named qlXuatNhap.pch and a precompiled types file named StdAfx.obj.
+    named QLXuatNhap.pch and a precompiled types file named StdAfx.obj.
 
 Resource.h
     This is the standard header file, which defines new resource IDs.
     Microsoft Visual C++ reads and updates this file.
 
-qlXuatNhap.manifest
+QLXuatNhap.manifest
 	Application manifest files are used by Windows XP to describe an applications
 	dependency on specific versions of Side-by-Side assemblies. The loader uses this
 	information to load the appropriate assembly from the assembly cache or private

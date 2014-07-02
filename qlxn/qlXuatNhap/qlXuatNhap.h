@@ -1,4 +1,4 @@
-// qlXuatNhap.h : main header file for the PROJECT_NAME application
+// QLXuatNhap.h : main header file for the PROJECT_NAME application
 //
 
 #pragma once
@@ -10,14 +10,14 @@
 #include "resource.h"		// main symbols
 
 
-// CqlXuatNhapApp:
-// See qlXuatNhap.cpp for the implementation of this class
+// CQLXuatNhapApp:
+// See QLXuatNhap.cpp for the implementation of this class
 //
 
-class CqlXuatNhapApp : public CWinApp
+class CQLXuatNhapApp : public CWinApp
 {
 public:
-	CqlXuatNhapApp();
+	CQLXuatNhapApp();
 
 // Overrides
 	public:
@@ -28,4 +28,4 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
-extern CqlXuatNhapApp theApp;
+extern CQLXuatNhapApp theApp;

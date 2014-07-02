@@ -1,39 +1,39 @@
-// qlXuatNhap.cpp : Defines the class behaviors for the application.
+// QLXuatNhap.cpp : Defines the class behaviors for the application.
 //
 
 #include "stdafx.h"
-#include "qlXuatNhap.h"
-#include "qlXuatNhapDlg.h"
+#include "QLXuatNhap.h"
+#include "QLXuatNhapDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 
-// CqlXuatNhapApp
+// CQLXuatNhapApp
 
-BEGIN_MESSAGE_MAP(CqlXuatNhapApp, CWinApp)
+BEGIN_MESSAGE_MAP(CQLXuatNhapApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 
-// CqlXuatNhapApp construction
+// CQLXuatNhapApp construction
 
-CqlXuatNhapApp::CqlXuatNhapApp()
+CQLXuatNhapApp::CQLXuatNhapApp()
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 }
 
 
-// The one and only CqlXuatNhapApp object
+// The one and only CQLXuatNhapApp object
 
-CqlXuatNhapApp theApp;
+CQLXuatNhapApp theApp;
 
 
-// CqlXuatNhapApp initialization
+// CQLXuatNhapApp initialization
 
-BOOL CqlXuatNhapApp::InitInstance()
+BOOL CQLXuatNhapApp::InitInstance()
 {
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
@@ -58,7 +58,7 @@ BOOL CqlXuatNhapApp::InitInstance()
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
-	CqlXuatNhapDlg dlg;
+	CQLXuatNhapDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)

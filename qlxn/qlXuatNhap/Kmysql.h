@@ -3,10 +3,10 @@
 #include <stdlib.h>
 
 #include "stdafx.h"
-//#include "qlXuatNhap.h"
+#include "QLXuatNhap.h"
 // #include <stdio.h>
 // #include <winsock.h>
- #pragma comment (lib, "libmysql.lib")
+// #pragma comment (lib, "libmysql.lib")
 #define BUFF_LENGTH 1024
 /************************************************************************/
 /* class KMySQL                                                         */
@@ -77,7 +77,6 @@ public:
 	//insert a new row in the table
 	my_ulonglong	insert_row(char **_values,int number_fields);
 	my_ulonglong	insert_row(CString *_values,int number_fields);
-	my_ulonglong	insert_row(CString _table,CString *_values,int number_fields);
 	//load data from file to the table
 	//vd: file="d:/pet.txt" line_terminate = "\\r\\n"
 	bool		load_data(char*_file,char*_line_terminate);
