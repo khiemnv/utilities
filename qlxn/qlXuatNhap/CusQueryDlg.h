@@ -50,13 +50,6 @@ public:
 	CEdit m_queryEdt;
 	CListCtrl m_resList;
 	CButton m_queryBtn;
-	
-	CEdit m_DuanQuery;
-	CButton m_DuanQueryButton;
-
-	CEdit m_MatHangEdit;
-	CButton m_MatHangButton;
-
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	int resize(int cx, int cy);
 	int resize(void);
@@ -82,8 +75,4 @@ public:
 		afx_msg void onMyNotify(NMHDR*pNotifyStruct,LRESULT*result);
 
 		afx_msg void OnNMDblclkResList(NMHDR *pNMHDR, LRESULT *pResult);
-		afx_msg void OnBnClickedQueryDuan();
-		afx_msg void OnEnChangeEdit1();
-		afx_msg void OnBnClickedButtonDuanLai();
-		afx_msg void OnBnClickedButtonMathang();
 };

@@ -99,7 +99,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -127,7 +127,7 @@
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				MinimalRebuild="false"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -241,6 +241,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\TaoHoaDon.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -292,6 +296,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TaoHoaDon.h"
+				>
+			</File>
+			<File
 				RelativePath=".\targetver.h"
 				>
 			</File>
@@ -315,7 +323,8 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\ClassDiagram1.cd"
+			RelativePath=".\res\html_tao.htm"
+			DeploymentContent="true"
 			>
 		</File>
 		<File
@@ -325,6 +334,11 @@
 		</File>
 		<File
 			RelativePath=".\ReadMe.txt"
+			>
+		</File>
+		<File
+			RelativePath=".\TaoHoaDon.htm"
+			DeploymentContent="true"
 			>
 		</File>
 	</Files>

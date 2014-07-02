@@ -12,6 +12,7 @@ IMPLEMENT_DYNAMIC(CCalculation, CDialog)
 
 CCalculation::CCalculation(CWnd* pParent /*=NULL*/)
 	: CDialog(CCalculation::IDD, pParent)
+	, m_pKmySql(NULL)
 {
 
 }

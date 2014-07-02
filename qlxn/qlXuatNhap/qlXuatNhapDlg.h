@@ -6,6 +6,8 @@
 #include "inputdlg.h"
 #include "cusquerydlg.h"
 #include "kinputdlg.h"
+#include "calculation.h"
+#include "taohoadon.h"
 //#include "kmysql.h"
 
 #define CONF_FILE	"config.txt"
@@ -61,4 +63,11 @@ public:
 	CKInputDlg m_dotXuatTab;
 	CKInputDlg m_xuatTab;
 	CCusQueryDlg m_tonTab;
+	// tinh so du
+	//int m_calculator;
+	afx_msg void OnToolsCalculation();
+	CCalculation m_calculation;
+	afx_msg void OnToolsTinhsodu();
+	afx_msg void OnToolsTaohoadon();
+	CTaoHoaDon m_taoHoaDon;
 };
