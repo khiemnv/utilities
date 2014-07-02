@@ -1,0 +1,15 @@
+///server////
+1. accept cac ket noi tu client
+	1.1. tao cac accept thread moi thread tra WM_ACCEPTOK va id cilent trong WPARAM
+2. listen
+	2.1. tao cac listen thread moi thread tra WM_LISTENOK va id client trong WPARAM
+10. nhan mess tu cac client
+	1.1. tao cac thread recv moi thread tra WM_RECVOK va addr of mess buf trong WPARAM
+	moi thread recv dc 1 buf rieng de chua mess
+20. chuyen mess den cac client tuong ung
+	2.1. tao thread send toi dich tuong ung
+
+
+///send mess duoc gui di tu client can co 1 truong de xac dinh client dich can den///
+send mess:           	|id client dich        	|mess content     	|
+                           	|int                      	|                          	|

@@ -1,0 +1,1 @@
+for %%f in (client*) do del %%f

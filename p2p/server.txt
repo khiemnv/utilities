@@ -1,0 +1,10 @@
+1 init winsock: 	WSAStartup()
+2 tao socket:		socket()
+3 bind the socket:	bind()			//ip server, port server
+4 listen:		listen()
+5 accept:		accept()
+
+6	tim port cua client
+6.0	luu lai ip va port cua client
+6.1 	chuyen thanh string
+6.2	send lai cho client
