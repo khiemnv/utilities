@@ -17,10 +17,11 @@
 #define C2S_MESS_LEN	16
 #define D_PORT			10+16
 #define D_IP			10+16+8
-#define TIME_OUT		5*60*1000
+#define TIME_OUT		10*60*1000
+#define SLEEP_TIME		5*1000
 
-#define L_CHG2S			1
-#define L_CON2S			2
+#define L_CHG2S			1999
+#define L_CON2S			2000
 
 bool	lvi_additem(HWND hlist,int index, char * name );
 void	CALLBACK	accept_thread();
@@ -32,7 +33,10 @@ int show_peer_sin(SOCKET s);
 
 bool is_chg2s_mess(char*buff);
 bool is_con2s_mess(char* buff);
+bool is_to_client_1(char* buff);
+bool is_to_client_2(char* buff);
 int make_con2s_mess(char* buff, SOCKET s);
+bool get_in_addr(char *host_name,IN_ADDR &addr);
 
 void show_wsa_error();
 void show_wsa_error(char *commend);
