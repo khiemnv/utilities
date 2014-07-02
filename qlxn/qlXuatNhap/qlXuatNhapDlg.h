@@ -1,0 +1,50 @@
+// qlXuatNhapDlg.h : header file
+//
+
+#pragma once
+#include "afxcmn.h"
+#include "inputdlg.h"
+#include "cusquerydlg.h"
+//#include "kmysql.h"
+
+#define CONF_FILE	"config.txt"
+#define COMMENT_LEN 12
+// CqlXuatNhapDlg dialog
+class CqlXuatNhapDlg : public CDialog
+{
+// Construction
+public:
+	CqlXuatNhapDlg(CWnd* pParent = NULL);	// standard constructor
+
+// Dialog Data
+	enum { IDD = IDD_QLXUATNHAP_DIALOG };
+
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+
+
+// Implementation
+protected:
+	HICON m_hIcon;
+
+	// Generated message map functions
+	virtual BOOL OnInitDialog();
+	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
+	afx_msg void OnPaint();
+	afx_msg HCURSOR OnQueryDragIcon();
+	DECLARE_MESSAGE_MAP()
+public:
+	CTabCtrl m_mainTab;
+	InputDlg m_dotTab;
+	InputDlg m_hangTab;
+	afx_msg void OnTcnSelchangeMainTab(NMHDR *pNMHDR, LRESULT *pResult);
+	int curTabSel;
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	int resize(void);
+	KMySQL m_kmysql;
+	InputDlg m_nhapTab;
+	InputDlg m_xuatTab;
+	InputDlg m_tonTab;
+	bool init_database(void);
+	CCusQueryDlg m_cusQTab;
+};
