@@ -1,0 +1,12 @@
+add_cut: -1
+tail---:.ico
+replace: 0
+old_str:
+new_str:
+chk_et-: 0
+ex_tail: 3
+.exe
+.bat
+.pif
+C:\Users\KhiemNV\Desktop\w32Tools
+remove_: 0
