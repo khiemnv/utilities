@@ -25,6 +25,7 @@
 
 #define TAB_TON_ID		6
 #define TAB_ALL_ID		7
+#define TAB_SODU		8
 #endif
 
 //define table name and number fields of table

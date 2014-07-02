@@ -27,6 +27,8 @@
 
 #define CCQD_MAXHEADING_LEN	20
 #define CCQD_QBUFF_SIZE		CKMYSQL_BUFF_LENGTH
+
+
 // CCusQueryDlg dialog
 
 class CCusQueryDlg : public CDialog
@@ -48,13 +50,20 @@ public:
 	CEdit m_queryEdt;
 	CListCtrl m_resList;
 	CButton m_queryBtn;
+	
+	CEdit m_DuanQuery;
+	CButton m_DuanQueryButton;
+
+	CEdit m_MatHangEdit;
+	CButton m_MatHangButton;
+
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	int resize(int cx, int cy);
 	int resize(void);
 	int create(CTabCtrl *pTab, KMySQL *pKmysql,int tab_id,CRect &rect);
 		KMySQL* m_pKmySql;
 		afx_msg void OnBnClickedQueryBtn();
-		void show_on_list(void);
+		void show_result(void);
 		int total_row;
 		void clean_list(void);
 		void add_item(int row, int col, CString content);
@@ -65,4 +74,16 @@ public:
 		afx_msg void OnLvnItemchangedResList(NMHDR *pNMHDR, LRESULT *pResult);
 		afx_msg void OnEnSetfocusQueryEdt();
 		afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+		afx_msg void OnLeftClick();
+		afx_msg void OnEnChangeQueryEdt();
+		afx_msg void OnNcLButtonDown(UINT nHitTest, CPoint point);
+		afx_msg LRESULT onMyMesg(WPARAM, LPARAM);
+		afx_msg void onMyContrl();
+		afx_msg void onMyNotify(NMHDR*pNotifyStruct,LRESULT*result);
+
+		afx_msg void OnNMDblclkResList(NMHDR *pNMHDR, LRESULT *pResult);
+		afx_msg void OnBnClickedQueryDuan();
+		afx_msg void OnEnChangeEdit1();
+		afx_msg void OnBnClickedButtonDuanLai();
+		afx_msg void OnBnClickedButtonMathang();
 };

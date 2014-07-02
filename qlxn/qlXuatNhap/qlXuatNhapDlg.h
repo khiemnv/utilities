@@ -45,7 +45,7 @@ public:
 	KMySQL m_kmysql;
 	//InputDlg m_nhapTab;
 	//InputDlg m_xuatTab;
-	InputDlg m_tonTab;
+	//InputDlg m_tonTab;
 	bool init_database(void);
 	CCusQueryDlg m_cusQTab;
 	//InputDlg m_dotXuatTab;
@@ -60,4 +60,5 @@ public:
 	CKInputDlg m_hangTab;
 	CKInputDlg m_dotXuatTab;
 	CKInputDlg m_xuatTab;
+	CCusQueryDlg m_tonTab;
 };

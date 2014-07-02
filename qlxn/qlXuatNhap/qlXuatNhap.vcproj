@@ -315,6 +315,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\ClassDiagram1.cd"
+			>
+		</File>
+		<File
 			RelativePath=".\KInputDlg.htm"
 			DeploymentContent="true"
 			>

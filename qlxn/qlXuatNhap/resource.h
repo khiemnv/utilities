@@ -14,6 +14,7 @@
 #define IDR_MAINFRAME                   128
 #define IDD_INPUT_DLG                   129
 #define IDD_CUSQUERY_DLG                130
+#define IDD_LAISUAT                     132
 #define IDC_MAIN_TAB                    1000
 #define IDC_RES_LIST                    1001
 #define IDC_REMOVE_BTN                  1002
@@ -44,6 +45,7 @@
 #define IDC_LIST1                       1033
 #define IDC_QUERY_EDT                   1034
 #define IDC_QUERY_BTN                   1035
+#define IDC_QUERY_Duan                  1035
 #define IDC_EDIT_0                      1036
 #define IDC_STATIC_LABEL_0              1037
 #define IDC_STATIC_LABEL_1              1038
@@ -63,14 +65,20 @@
 #define IDC_DATETIMEPICKER_0            1052
 #define IDC_DATETIMEPICKER1             1053
 #define IDC_DATETIMEPICKER_1            1053
+#define IDC_EDIT_DUAN                   1054
+#define IDC_EDIT_DUAN_LAI               1055
+#define IDC_BUTTON_DUAN_LAI             1056
+#define IDC_EDIT_MATHANG                1057
+#define IDC_BUTTON2                     1058
+#define IDC_BUTTON_MATHANG              1058
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        132
+#define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1054
+#define _APS_NEXT_CONTROL_VALUE         1059
 #define _APS_NEXT_SYMED_VALUE           107
 #endif
 #endif

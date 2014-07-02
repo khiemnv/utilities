@@ -1,0 +1,23 @@
+1. Tinh lai theo dot nhap tham so chua trong pDotNhap
+
+select n.dot_nhap, n.hang, (x.so_luong_x*(x.don_gia_x - (100+n.thue_n)/100*n.don_gia_n)) as Sodu 
+from nhap as n,xuat as x 
+where "dotnhap"=n.dot_nhap and "DN1"=x.dot_nhap and n.hang=x.hang;
+
+2. Tinh lai theo du_an
+
+select dot_xuat.du_an,x.dot_nhap,x.dot_xuat,x.hang,(x.so_luong_x*( x.don_gia_x - (100+n.thue_n)/100*n.don_gia_n)) as Sodu
+from dot_xuat, nhap as n, xuat as x
+where "DA1"=dot_xuat.du_an and x.dot_xuat=dot_xuat.ms_dot_xuat and x.dot_nhap=n.dot_nhap and x.hang=n.hang and n.hang="hang";
+
+3. Tinh lai theo mat hang trong cac du an.
+
+select hang.ms_hang, hang.ten_hang, hang.don_vi, dn.du_an, n.dot_nhap, x.dot_xuat, (x.so_luong_x*( x.don_gia_x - (100+n.thue_n)/100*n.don_gia_n)) as Sodu 
+from hang, dot_nhap as dn, nhap as n, xuat as x 
+where  "H2" = hang.ms_hang and n.hang=hang.ms_hang and n.hang=x.hang and dn.ms_dot_nhap=n.dot_nhap and x.dot_nhap=n.dot_nhap; 
+
+
+
+
+
+

@@ -41,7 +41,7 @@
 #define KK_NX_DATE	60
 
 #define KK_CHAR_WIDTH		6
-#define KK_COL_WIDTH(x)		((x)*6+10)
+#define KK_COL_WIDTH(x)		((x)*6+15)
 #endif
 //define table name and number fields of table
 #define DU_AN_TABLE		"du_an"
@@ -150,7 +150,8 @@ public:
 		int c0=-1, int c1=-1, int c2=-1, int c3=-1, int c4=-1, 
 		int c5=-1, int c6=-1, int c7=-1, int c8=-1, int c9=-1
 		);
-	int* create_flags(void);
+	int create_flags(void);
+	/*int* create_flags(void);*/
 	int* create_flagLabel(
 		int c0=-1, int c1=-1, int c2=-1, int c3=-1, int c4=-1, 
 		int c5=-1, int c6=-1, int c7=-1, int c8=-1, int c9=-1
