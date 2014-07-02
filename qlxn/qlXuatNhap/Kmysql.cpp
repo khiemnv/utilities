@@ -16,6 +16,7 @@ char * KMySQL::Kstrcpy_c(char* &des_str, char *src_str){
 	return des_str;
 }
 
+
 char * KMySQL::Kstrcpy_r(char* &des_str, char *src_str){	
 	des_str = (char*)realloc(des_str,sizeof(char) * (strlen(src_str) + 1));
 	strcpy (des_str,src_str);
@@ -49,7 +50,7 @@ KMySQL::KMySQL(CString server_name, CString db_user, CString db_userpass, int se
 
 	port = server_port;
 	mysql = mysql_init(NULL);
-	buffer = 0; buffer = (char*)calloc(sizeof(char),BUFF_LENGTH);
+	buffer = 0; buffer = (char*)calloc(sizeof(char),CKMYSQL_BUFF_LENGTH);
 }
 KMySQL::KMySQL(char *_table,char *_server_name,char *_db_user,char *_db_userpass,unsigned int _port, char *_db_name){
 	table = 0; Kstrcpy_c(table,_table);
@@ -59,7 +60,7 @@ KMySQL::KMySQL(char *_table,char *_server_name,char *_db_user,char *_db_userpass
 	db = 0; Kstrcpy_c(db,_db_name);
 	port = _port;
 	mysql = mysql_init(NULL);
-	buffer = 0; buffer = (char*)calloc(sizeof(char),BUFF_LENGTH);
+	buffer = 0; buffer = (char*)calloc(sizeof(char),CKMYSQL_BUFF_LENGTH);
 }
 KMySQL::KMySQL(char *_server_name,char *_db_user,char *_db_userpass,unsigned int _port, char *_db_name){
 	table = 0;
@@ -69,7 +70,7 @@ KMySQL::KMySQL(char *_server_name,char *_db_user,char *_db_userpass,unsigned int
 	db = 0; Kstrcpy_c(db,_db_name);
 	port = _port;
 	mysql = mysql_init(NULL);
-	buffer = 0; buffer = (char*)calloc(sizeof(char),BUFF_LENGTH);
+	buffer = 0; buffer = (char*)calloc(sizeof(char),CKMYSQL_BUFF_LENGTH);
 }
 KMySQL::KMySQL(){
 	init();
@@ -95,7 +96,7 @@ void KMySQL::reset(char *_table,char *_server_name,char *_db_user,char *_db_user
 	port = _port;
 	mysql_close(mysql);
 	mysql = mysql_init(NULL);
-	buffer = (char*)realloc(buffer,sizeof(char) * BUFF_LENGTH);
+	buffer = (char*)realloc(buffer,sizeof(char) * CKMYSQL_BUFF_LENGTH);
 }
 //////////////////////////////////////////////////////////////////////////
 /************************************************************************/
@@ -182,7 +183,6 @@ bool KMySQL::query(CString stmt_str)
 	wcstombs_s(&convertedCharsw, q, newsizew, stmt_str, _TRUNCATE );
 	
 	/*sprintf(sql,"%s\0\0",stmt_str);*/
-	/*bool	retval = mysql_query(mysql,q);*/
 	if (mysql_query(mysql,q))
 	{
 		/*sprintf(buffer, "Error: %s\n",mysql_error(mysql));*/
@@ -349,11 +349,61 @@ my_ulonglong KMySQL::insert_row(CString *_values,int number_fields){
 	size_t newsizew = (temp.GetLength() + 1)*2;
 	size_t convertedCharsw = 0;
 	wcstombs_s(&convertedCharsw, q, newsizew, temp, _TRUNCATE );
+	//wcstombs(q,temp,CKMYSQL_BUFF_LENGTH);
 
-	if (query(q))
-		return mysql_affected_rows(mysql);
-	else
+	if (mysql_query(mysql, q)){
+		sprintf(buffer, "Error: %s\n",
+			mysql_error(mysql));
 		return 0;
+	}
+	else {
+		return mysql_affected_rows(mysql);
+	}
+// 	if (query(q))
+// 		return mysql_affected_rows(mysql);
+// 	else
+// 		return 0;
+}
+my_ulonglong KMySQL::insert_row(CString _table,CString* _values,int number_fields)
+{
+ 	char *q = buffer;
+// 	//INSERT INTO pet VALUES ('Puffball2'
+// 	//,'Diane2','hamster2','f','1999-03-30',NULL
+// 	//)
+// 	/*int temp = sprintf(q,"INSERT INTO %s VALUES (%s",table,_row[0]);*/
+ 	CString temp;
+	/*temp=CString("INSERT INTO ") + CString(table) + CString(" VALUES (") + _values[0];*/
+	temp.Format(_T("INSERT INTO %s VALUES("),_table);
+
+	int j;
+	for(j = 0; j < number_fields; j++)
+	{
+		if (_values[j].IsEmpty())
+			temp.Append(_T("NULL,"));
+		else
+			temp.AppendFormat(_T("'%s',"),_values[j]);		
+	}
+
+	temp.TrimRight(',');
+	temp.Append(_T(");"));
+
+	size_t newsizew = (temp.GetLength() + 1)*2;
+	size_t convertedCharsw = 0;
+	wcstombs_s(&convertedCharsw, q, newsizew, temp, _TRUNCATE );
+	//wcstombs(q,temp,CKMYSQL_BUFF_LENGTH);
+
+	if (mysql_query(mysql, q)){
+		sprintf(buffer, "Error: %s\n",
+			mysql_error(mysql));
+		return 0;
+	}
+	else {
+		return mysql_affected_rows(mysql);
+	}
+	// 	if (query(q))
+	// 		return mysql_affected_rows(mysql);
+	// 	else
+	return 0;
 }
 /*show table content*/
 bool KMySQL::show_table(){
@@ -383,22 +433,22 @@ bool KMySQL::show_table(char *table_name){
 
 /*make and condition*/
 char * KMySQL::mk_and_eq(char**_fields,char**_values,int _n){
-	char * condition = buffer + (BUFF_LENGTH/3);
+	char * condition = buffer + (CKMYSQL_BUFF_LENGTH/3);
 	//species = 'dog' AND sex = 'f'
-	int temp = sprintf(condition,"(%s \= %s",_fields[0],_values[0]);
+	int temp = sprintf(condition,"(%s = %s",_fields[0],_values[0]);
 	for(int j = 1; j< _n;j++){
-		temp += sprintf(condition+temp," AND %s \= %s",_fields[j],_values[j]);
+		temp += sprintf(condition+temp," AND %s = %s",_fields[j],_values[j]);
 	}
 	sprintf(condition+temp,")");
 	//printf("%s\n",condition);
 	return condition;
 }
 char * KMySQL::mk_and_ne(char**_fields,char**_values,int _n){
-	char * condition = buffer + (BUFF_LENGTH/3);
+	char * condition = buffer + (CKMYSQL_BUFF_LENGTH/3);
 	//species = 'dog' AND sex = 'f'
-	int temp = sprintf(condition,"(%s \!\= %s",_fields[0],_values[0]);
+	int temp = sprintf(condition,"(%s != %s",_fields[0],_values[0]);
 	for(int j = 1; j< _n;j++){
-		temp += sprintf(condition+temp," AND %s \!\= %s",_fields[j],_values[j]);
+		temp += sprintf(condition+temp," AND %s != %s",_fields[j],_values[j]);
 	}
 	sprintf(condition+temp,")");
 	//printf("%s\n",condition);
@@ -406,21 +456,21 @@ char * KMySQL::mk_and_ne(char**_fields,char**_values,int _n){
 }
 /*make or conditon*/
 char * KMySQL::mk_or_eq(char**_fields,char**_values,int _n){
-	char * condition = buffer + (BUFF_LENGTH / 3 * 2);
+	char * condition = buffer + (CKMYSQL_BUFF_LENGTH / 3 * 2);
 	// (name = species = 'dog' OR sex = 'f')
-	int temp = sprintf(condition,"(%s \= %s",_fields[0],_values[0]);
+	int temp = sprintf(condition,"(%s = %s",_fields[0],_values[0]);
 	for(int j = 1; j< _n;j++){
-		temp += sprintf(condition+temp," OR %s \= %s",_fields[j],_values[j]);
+		temp += sprintf(condition+temp," OR %s = %s",_fields[j],_values[j]);
 	}
 	sprintf(condition+temp,")");
 	return condition;
 }
 char * KMySQL::mk_or_ne(char**_fields,char**_values,int _n){
-	char * condition = buffer + (BUFF_LENGTH / 3 * 2);
+	char * condition = buffer + (CKMYSQL_BUFF_LENGTH / 3 * 2);
 	// (name = species = 'dog' OR sex = 'f')
-	int temp = sprintf(condition,"(%s \!\= %s",_fields[0],_values[0]);
+	int temp = sprintf(condition,"(%s != %s",_fields[0],_values[0]);
 	for(int j = 1; j< _n;j++){
-		temp += sprintf(condition+temp," OR %s \!\= %s",_fields[j],_values[j]);
+		temp += sprintf(condition+temp," OR %s != %s",_fields[j],_values[j]);
 	}
 	sprintf(condition+temp,")");
 	return condition;
@@ -459,9 +509,9 @@ my_ulonglong KMySQL::update(char**_files,char**_new_values,int _n,char* _condito
 	if (_conditon == NULL) return false;
 	//update pet set sex = 'f',death = '2008-12-30' where name = 'Whistler';
 	char *q = buffer;
-	int temp = sprintf(q,"UPDATE %s SET %s \= %s",table,_files[0],_new_values[0]);
+	int temp = sprintf(q,"UPDATE %s SET %s = %s",table,_files[0],_new_values[0]);
 	for (int j = 1; j<_n;j++)
-		temp += sprintf(q+temp,",%s \= %s",_files[j],_new_values[j]);
+		temp += sprintf(q+temp,",%s = %s",_files[j],_new_values[j]);
 	sprintf(q+temp," WHERE %s",_conditon);
 	if(query(q))
 		return mysql_affected_rows(mysql);
@@ -530,14 +580,14 @@ void KMySQL::free_res(){
 bool KMySQL::create_database(){
 	//CREATE DATABASE menagerie;
 	char *q = buffer;
-	sprintf(q,"CREATE DATABASE %s",db);
+	sprintf_s(q,CKMYSQL_BUFF_LENGTH,"CREATE DATABASE %s",db);
 	return query(q);
 }
 /*delete database*/
 bool KMySQL::delete_database(){
 	//DROP {DATABASE | SCHEMA} [IF EXISTS] db_name
 	char *q = buffer;
-	sprintf(q,"DROP DATABASE %s",db);
+	sprintf_s(q,CKMYSQL_BUFF_LENGTH,"DROP DATABASE %s",db);
 	return query(q);
 }
 
@@ -548,7 +598,7 @@ MYSQL*	KMySQL::connect(){
 /*select database*/
 bool	KMySQL::select_database(){
 	char *q = buffer;
-	sprintf(q,"USE %s",db);
+	sprintf_s(q,CKMYSQL_BUFF_LENGTH,"USE %s",db);
 	return query(q);
 }
 bool	KMySQL::select_table(char* table_name)
@@ -561,3 +611,20 @@ MYSQL_RES * KMySQL::get_res(void)
 {
 	return result;
 }
+
+// CStringArray KMySQL::getFieldsName(void)
+// {
+// 	CStringArray fieldsName;
+// 	unsigned int num_fields;
+// 	unsigned int i;
+// 	MYSQL_FIELD *fields;
+// 
+// 	num_fields = mysql_num_fields(result);
+// 	fields = mysql_fetch_fields(result);
+// 	for(i = 0; i < num_fields; i++)
+// 	{
+// 		fieldsName.Add(CString(fields[i].name));
+// 	}
+// 
+// 	return fieldsName;
+// }

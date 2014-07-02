@@ -5,7 +5,7 @@
 #define cstrToAstr cstrAtoAstr
 #endif
 
-class CKKString
+class CKKString abstract
 {
 public:
 	CKKString(void);

@@ -1,0 +1,62 @@
+select nhap.dot_nhap,nhap.ms_hang,so_luong_kgN-IFNULL(slx,0) as soKG,
+		so_luong_cayN-IFNULL(cx,0) as soCAY,
+		don_giaN,thueN
+		from nhap left join xuat on nhap.ms_hang = xuat.ms_hang and nhap.dot_nhap =  xuat.dot_nhap
+		order by nhap.dot_nhap;
+
+select nhap.dot_nhap,nhap.ms_hang,so_luong_kgN-IFNULL(slx,0) as soKG,
+		so_luong_cayN-IFNULL(cx,0) as soCAY,
+		don_giaN,thueN
+		from nhap left join (select ms_hang as mshx,dot_nhap as dx,sum(so_luong_kgX) as slx,sum(so_luong_cayX) as cx
+				from xuat
+				group by ms_hang,dot_nhap
+				info as t2)
+			on nhap.ms_hang = mshx and nhap.dot_nhap =  dx
+		order by nhap.dot_nhap;
+t1 nhap
+select * from t1;
+
+select * 
+from	(select ms_hang,dot_nhap, sum(so_luong_kgX)
+	from xuat t2)
+;
+create table tbtemp (tongX double);
+insert into tbtemp 
+	select sum(so_luong_kgx)
+	from xuat
+	group by ms_hang,dot_nhap;
+select * from tbtemp;
+delete from tbtemp;
+
+select *
+from	tb2
+	(select sum(so_luong_kgx)
+	from xuat
+	group by ms_hang,dot_nhap) as tb2;
+
+select * from nhap into outfile 'd:/tbnhap.txt' LINES TERMINATED BY '\r\n';
+
+select * from (select dot_nhap,sum(so_luong_kgX) as slN from xuat group by ms_hang,dot_nhap) AS t1;
+
+===========================thong ke xuat nhap====================================
+select	*
+from
+	(select dot_nhap as dn,ms_hang as msh,so_luong_kgN as slkn,so_luong_cayN as slcn, don_giaN as dgn, thueN as tn
+	from nhap) as t1
+	natural left join
+	(select dot_nhap as dn,ms_hang as msh,sum(so_luong_kgX) as slkx,sum(so_luong_cayX) as slcx, don_giaX as dgx, thueX as tx
+	from xuat group by dot_nhap,ms_hang) as t2
+;
+===========================tinh luong hang ton===================================
+select	t1.dn,t1.msh,slkn-IFNULL(slkx,0) as slKG,slcn-IFNULL(slcx,0) as slc,dgn,tn
+from
+	(select dot_nhap as dn,ms_hang as msh,so_luong_kgN as slkn,so_luong_cayN as slcn, don_giaN as dgn, thueN as tn
+	from nhap) as t1
+	natural left join
+	(select dot_nhap as dn,ms_hang as msh,sum(so_luong_kgX) as slkx,sum(so_luong_cayX) as slcx, don_giaX as dgx, thueX as tx
+	from xuat group by dot_nhap,ms_hang) as t2;
+=================================================================================
+
+select * from
+(select dot_nhap as dn,ms_hang as msh,sum(so_luong_kgX) as slkx,sum(so_luong_cayX) as slcx, don_giaX as dg, thueX as tx
+from xuat group by dot_nhap,ms_hang) as t2;

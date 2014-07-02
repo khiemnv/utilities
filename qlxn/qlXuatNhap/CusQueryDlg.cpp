@@ -14,12 +14,15 @@ CCusQueryDlg::CCusQueryDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CCusQueryDlg::IDD, pParent)
 	, m_pKmySql(NULL)
 	, total_row(0)
+	, m_tabID(0)
+	, m_buffer(NULL)
 {
-
+	m_buffer=(TCHAR*)malloc(CCQD_QBUFF_SIZE*sizeof(TCHAR));
 }
 
 CCusQueryDlg::~CCusQueryDlg()
 {
+	free(m_buffer);
 }
 
 void CCusQueryDlg::DoDataExchange(CDataExchange* pDX)
@@ -34,6 +37,9 @@ void CCusQueryDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CCusQueryDlg, CDialog)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_QUERY_BTN, &CCusQueryDlg::OnBnClickedQueryBtn)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_RES_LIST, &CCusQueryDlg::OnLvnItemchangedResList)
+	ON_EN_SETFOCUS(IDC_QUERY_EDT, &CCusQueryDlg::OnEnSetfocusQueryEdt)
+	ON_WM_LBUTTONDOWN()
 END_MESSAGE_MAP()
 
 
@@ -79,10 +85,11 @@ int CCusQueryDlg::resize(void)
 	return 0;
 }
 
-int CCusQueryDlg::create(CTabCtrl *pTab, KMySQL *pKmysql, CRect &rect)
+int CCusQueryDlg::create(CTabCtrl *pTab, KMySQL *pKmysql,int tab_id,CRect &rect)
 {
 	m_pKmySql=pKmysql;
 	Create(IDD,pTab);
+	m_tabID=tab_id;
 	MoveWindow(rect);
 	return 0;
 }
@@ -90,10 +97,8 @@ int CCusQueryDlg::create(CTabCtrl *pTab, KMySQL *pKmysql, CRect &rect)
 void CCusQueryDlg::OnBnClickedQueryBtn()
 {
 	// TODO: Add your control notification handler code here
-	TCHAR temp[MAX_PATH];
-	ULONG n;
-	m_queryEdt.GetWindowText(temp,MAX_PATH);
-	if(m_pKmySql->query(temp))
+	m_queryEdt.GetWindowText(m_buffer,CKMYSQL_BUFF_LENGTH);
+	if(m_pKmySql->query(m_buffer))
 	{
 		m_pKmySql->store_result();
 		show_on_list();
@@ -105,13 +110,15 @@ void CCusQueryDlg::show_on_list(void)
 	MYSQL_ROW row;
 	unsigned int num_fields;
 	unsigned int i=0,j=0;
+
 	clean_list();
 
+	create_cols();//tao cac cols
 
 	num_fields = mysql_num_fields(m_pKmySql->get_res());
 	
-	for (int i=0; i<num_fields; i++)
-		m_resList.InsertColumn(i,_T(""),LVCFMT_LEFT,LVCF_MINWIDTH);
+// 	for (int i=0; i<num_fields; i++)
+// 		m_resList.InsertColumn(i,_T(""),LVCFMT_LEFT,LVCF_MINWIDTH);
 
 	while ((row = mysql_fetch_row(m_pKmySql->get_res())))
 	{
@@ -157,4 +164,78 @@ void CCusQueryDlg::add_item(int row, int col, CString content)
 		m_resList.SetItem(&Item);
 	else
 		m_resList.InsertItem(&Item);
+}
+
+void CCusQueryDlg::create_cols(void)
+{
+	unsigned int num_fields;
+	unsigned int i;
+	MYSQL_FIELD *fields;
+
+	size_t pReturnValue;
+	size_t sizeInWords=CCQD_MAXHEADING_LEN;
+
+	num_fields = mysql_num_fields(m_pKmySql->get_res());
+	fields = mysql_fetch_fields(m_pKmySql->get_res());
+	for(i = 0; i < num_fields; i++)
+	{
+		mbstowcs_s(&pReturnValue,m_buffer,sizeInWords,fields[i].name,_TRUNCATE);
+		m_resList.InsertColumn(i,m_buffer,LVIF_TEXT,KK_COL_WIDTH(pReturnValue));
+	}
+}
+
+BOOL CCusQueryDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	// TODO:  Add extra initialization here
+	m_resList.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	// EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CCusQueryDlg::OnLvnItemchangedResList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	int curSel;
+	CString selRow;
+
+	int nColumnCount;
+	CHeaderCtrl* pHeaderCtrl = m_resList.GetHeaderCtrl();
+
+	if (pHeaderCtrl != NULL)
+		nColumnCount = pHeaderCtrl->GetItemCount();
+	else
+		nColumnCount=0;
+
+	for(int i=0;i<nColumnCount;i++)
+	{
+		curSel=m_resList.GetNextItem(-1,LVIS_FOCUSED|LVIS_SELECTED);
+		selRow.AppendFormat(_T("%s\t"),m_resList.GetItemText(curSel,i));
+	}
+
+	selRow.TrimRight('\t');
+	m_queryEdt.SetWindowText(selRow);
+	*pResult = 0;
+}
+
+void CCusQueryDlg::OnEnSetfocusQueryEdt()
+{
+	// TODO: Add your control notification handler code here
+	//AfxMessageBox(_T("query edit get focus"));
+	//m_queryEdt.SetHighlight(0,m_queryEdt.GetWindowTextLength());
+}
+
+void CCusQueryDlg::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+//	AfxMessageBox(_T("mouse left click"));
+// 	if (ChildWindowFromPoint(point)==&m_queryEdt)
+// 	{
+// 		m_queryEdt.SetHighlight(0,m_queryEdt.GetWindowTextLength());;
+// 	}
+//	m_queryEdt.SetHighlight(0,m_queryEdt.GetWindowTextLength());;
+	CDialog::OnLButtonDown(nFlags, point);
 }

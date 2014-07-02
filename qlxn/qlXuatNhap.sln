@@ -1,7 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QLXuatNhap", "QLXuatNhap\QLXuatNhap.vcproj", "{533839CB-6F33-473C-9F70-D27D9E375BD3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qlXuatNhap", "qlXuatNhap\qlXuatNhap.vcproj", "{A16B17A9-B6AB-44BA-A4B6-287CAE24FCF6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{98794507-42C0-4100-8CFC-30B35548B27D}"
+	ProjectSection(SolutionItems) = preProject
+		qlXuatNhap\config.txt = qlXuatNhap\config.txt
+		..\qlxn.bmp = ..\qlxn.bmp
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +15,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{533839CB-6F33-473C-9F70-D27D9E375BD3}.Debug|Win32.ActiveCfg = Debug|Win32
-		{533839CB-6F33-473C-9F70-D27D9E375BD3}.Debug|Win32.Build.0 = Debug|Win32
-		{533839CB-6F33-473C-9F70-D27D9E375BD3}.Release|Win32.ActiveCfg = Release|Win32
-		{533839CB-6F33-473C-9F70-D27D9E375BD3}.Release|Win32.Build.0 = Release|Win32
+		{A16B17A9-B6AB-44BA-A4B6-287CAE24FCF6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A16B17A9-B6AB-44BA-A4B6-287CAE24FCF6}.Debug|Win32.Build.0 = Debug|Win32
+		{A16B17A9-B6AB-44BA-A4B6-287CAE24FCF6}.Release|Win32.ActiveCfg = Release|Win32
+		{A16B17A9-B6AB-44BA-A4B6-287CAE24FCF6}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

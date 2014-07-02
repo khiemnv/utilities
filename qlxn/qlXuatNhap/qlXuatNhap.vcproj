@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="QLXuatNhap"
-	ProjectGUID="{533839CB-6F33-473C-9F70-D27D9E375BD3}"
-	RootNamespace="QLXuatNhap"
+	Name="qlXuatNhap"
+	ProjectGUID="{A16B17A9-B6AB-44BA-A4B6-287CAE24FCF6}"
+	RootNamespace="qlXuatNhap"
 	Keyword="MFCProj"
 	TargetFrameworkVersion="196613"
 	>
@@ -186,7 +186,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\AllDlg.cpp"
+				RelativePath=".\Calculation.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CusQueryDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Findation.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\InputDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\KInputDlg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\KKString.cpp"
 				>
 			</File>
 			<File
@@ -194,11 +214,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\QLXuatNhap.cpp"
+				RelativePath=".\qlXuatNhap.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\QLXuatNhapDlg.cpp"
+				RelativePath=".\qlXuatNhapDlg.cpp"
 				>
 			</File>
 			<File
@@ -228,7 +248,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\AllDlg.h"
+				RelativePath=".\Calculation.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CusQueryDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Findation.h"
+				>
+			</File>
+			<File
+				RelativePath=".\InputDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\KInputDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\KKString.h"
 				>
 			</File>
 			<File
@@ -236,11 +276,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\QLXuatNhap.h"
+				RelativePath=".\qlXuatNhap.h"
 				>
 			</File>
 			<File
-				RelativePath=".\QLXuatNhapDlg.h"
+				RelativePath=".\qlXuatNhapDlg.h"
 				>
 			</File>
 			<File
@@ -262,20 +302,21 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\res\QLXuatNhap.ico"
+				RelativePath=".\res\qlXuatNhap.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\QLXuatNhap.rc"
+				RelativePath=".\qlXuatNhap.rc"
 				>
 			</File>
 			<File
-				RelativePath=".\res\QLXuatNhap.rc2"
+				RelativePath=".\res\qlXuatNhap.rc2"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\ClassDiagram1.cd"
+			RelativePath=".\KInputDlg.htm"
+			DeploymentContent="true"
 			>
 		</File>
 		<File
@@ -286,7 +327,7 @@
 	<Globals>
 		<Global
 			Name="RESOURCE_FILE"
-			Value="QLXuatNhap.rc"
+			Value="qlXuatNhap.rc"
 		/>
 	</Globals>
 </VisualStudioProject>

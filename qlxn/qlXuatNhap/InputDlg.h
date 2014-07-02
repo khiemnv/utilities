@@ -14,24 +14,35 @@
 #define EDIT_MODE	2
 #define REMOVE_MODE	3
 //define tab id
-#define TAB_DOT_ID	0
-#define TAB_HANG_ID	1
-#define	TAB_NHAP_ID	2
-#define TAB_XUAT_ID	3
-#define TAB_TON_ID	4
-#define TAB_ALL_ID	5
-//define table name and number fields of table
-#define NHAP_TABLE	"nhap"
-#define XUAT_TABLE	"xuat"
-#define DOT_TABLE	"dot"
-#define HANG_TABLE	"hang"
+#ifndef INPUT_TAB_ID
+#define INPUT_TAB_ID
+#define TAB_DU_AN_ID	0	//khiem
+#define TAB_DOT_NHAP_ID	1
+#define TAB_HANG_ID		2
+#define	TAB_NHAP_ID		3
+#define TAB_DOT_XUAT_ID 4
+#define TAB_XUAT_ID		5
 
-#define N_NHAP_FIELD	7
-#define N_XUAT_FIELD	8
-#define N_DOT_FIELD		4
-#define N_HANG_FIELD	4
-#define N_TON_FIELD		6
-#define N_ALL_FIELD		13
+#define TAB_TON_ID		6
+#define TAB_ALL_ID		7
+#endif
+
+//define table name and number fields of table
+#define DU_AN_TABLE		"du_an"
+#define NHAP_TABLE		"nhap"
+#define XUAT_TABLE		"xuat"
+#define DOT_NHAP_TABLE	"dot_nhap"
+#define DOT_XUAT_TABLE	"dot_xuat"
+#define HANG_TABLE		"hang"
+
+#define N_HANG_FIELD		4
+#define N_NHAP_FIELD		7
+#define N_XUAT_FIELD		8
+#define N_DOT_NHAP_FIELD	5
+#define N_DOT_XUAT_FIELD	5
+#define N_DU_AN_FIELD		5
+
+#define N_TON_FIELD			13
 //define cho ham resize
 #ifndef __KKSCALE
 #define __KKSCALE
@@ -47,10 +58,10 @@
 #define KK_NX_BTN	50
 #define KK_NY_EDT	12
 #define KK_NY_STATIC 8
-#define KK_NX_NG	60
+#define KK_NX_DATE	60
 #endif
 //
-
+#define N_INPUTDLG_CWND 26
 
 // InputDlg dialog
 
@@ -129,7 +140,7 @@ public:
 	afx_msg void OnLvnItemchangedResList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMDblclkResList(NMHDR *pNMHDR, LRESULT *pResult);
 	bool add_record(void);
-	UINT m_addFlag;
+	UINT m_flagAC;
 	int m_addNField;
 	CString m_addTable;
 	bool show_record(void);
@@ -139,4 +150,6 @@ public:
 	void update_TTCTedt(void);
 	bool del_record(void);
 	afx_msg void OnBnClickedEditBtn();
+// 	InputDlg m_dotXuatTab;
+// 	InputDlg m_duAnTab;
 };

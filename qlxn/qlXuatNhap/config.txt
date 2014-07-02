@@ -1,17 +1,40 @@
 SERVER_NAME:localhost
 DB_USER____:root
 DB_USERPASS:rabbit
-DB_NAME____:ql_xuat_nhap
+DB_NAME____:qlxn
 SERVER_PORT: 3306
-N_TABLES___: 5
-xuat
-nhap
-ton
-dot
+
+N_TABLES___: 6
 hang
-N_QUERY____: 5
-CREATE*TABLE*xuat*(ms_hang*VARCHAR(50),*so_luong_kgX*DOUBLE,*dot_nhap*INT,*so_luong_cayX*INT,*don_giaX*DOUBLE,*thueX*FLOAT,*ngay_xuat*DATE,*commentX*VARCHAR(200));
-CREATE*TABLE*nhap*(ms_hang*VARCHAR(50),*so_luong_kgN*DOUBLE,*dot_nhap*INT,*so_luong_cayN*INT,*don_giaN*DOUBLE,*thueN*FLOAT,*commentN*VARCHAR(200));
-CREATE*TABLE*ton*(ms_hang*VARCHAR(50),*so_luong_kgT*DOUBLE,*dot_nhap*INT,*so_luong_cayT*INT,*don_giaT*DOUBLE,*commentT*VARCHAR(200));
-CREATE*TABLE*dot(dot_nhap*INT,ms_chung_tu*VARCHAR(50),ngay_nhap*DATE,commentD*VARCHAR(200));
-CREATE*TABLE*hang(dot_nhap*INT,ms_hang*VARCHAR(50),ten_hang*VARCHAR(200),commentH*VARCHAR(200));
+nhap
+xuat
+dot_nhap
+dot_xuat
+du_an
+
+CREATE_TBL_: 6
+CREATE*TABLE*hang(ms_hang*VARCHAR(20),ten_hang*VARCHAR(50),don_vi*VARCHAR(10),ghi_chu*VARCHAR(100));
+CREATE*TABLE*nhap(dot_nhap*VARCHAR(20),hang*VARCHAR(20),so_luong_n*DOUBLE,don_gia_n*DOUBLE,thue_n*FLOAT,chi_phi_phu_n*DOUBLE,ghi_chu*VARCHAR(100));
+CREATE*TABLE*xuat(dot_nhap*VARCHAR(20),hang*VARCHAR(20),dot_xuat*VARCHAR(20),so_luong_x*DOUBLE,don_gia_x*DOUBLE,thue_x*FLOAT,chi_phi_phu_x*DOUBLE,ghi_chu*VARCHAR(100));
+CREATE*TABLE*dot_nhap(du_an*VARCHAR(20),ms_dot_nhap*VARCHAR(20),ngay_nhap*DATE,hoa_don_nhap*VARCHAR(20),ghi_chu*VARCHAR(100));
+CREATE*TABLE*dot_xuat(du_an*VARCHAR(20),ms_dot_xuat*VARCHAR(20),ngay_xuat*DATE,hoa_don_xuat*VARCHAR(20),ghi_chu*VARCHAR(100));
+CREATE*TABLE*du_an(ms_du_an*VARCHAR(20),ten_du_an*VARCHAR(50),ngay_bat_dau*DATE,ngay_ket_thuc*DATE,ghi_chu*VARCHAR(100));
+
+ALTER_TBL_: 15
+ALTER*TABLE*hang*ADD*PRIMARY*KEY*(ms_hang);
+ALTER*TABLE*nhap*ADD*PRIMARY*KEY*(hang,dot_nhap);
+ALTER*TABLE*xuat*ADD*PRIMARY*KEY*(hang,dot_nhap,dot_xuat);
+ALTER*TABLE*dot_nhap*ADD*PRIMARY*KEY*(ms_dot_nhap);
+ALTER*TABLE*dot_xuat*ADD*PRIMARY*KEY*(ms_dot_xuat);
+
+ALTER*TABLE*du_an*ADD*PRIMARY*KEY*(ms_du_an);
+ALTER*TABLE*dot_nhap*ADD*FOREIGN*KEY*(du_an)*REFERENCES*du_an(ms_du_an)*ON*DELETE*CASCADE;
+ALTER*TABLE*dot_xuat*ADD*FOREIGN*KEY*(du_an)*REFERENCES*du_an(ms_du_an)*ON*DELETE*CASCADE;
+ALTER*TABLE*nhap*ADD*FOREIGN*KEY*(hang)*REFERENCES*hang(ms_hang)*ON*DELETE*CASCADE;
+ALTER*TABLE*nhap*ADD*FOREIGN*KEY*(dot_nhap)*REFERENCES*dot_nhap(ms_dot_nhap)*ON*DELETE*CASCADE;
+
+ALTER*TABLE*nhap*MODIFY*so_luong_n*DOUBLE*NOT*NULL;
+ALTER*TABLE*xuat*ADD*FOREIGN*KEY*(hang)*REFERENCES*hang(ms_hang)*ON*DELETE*CASCADE;
+ALTER*TABLE*xuat*ADD*FOREIGN*KEY*(dot_nhap)*REFERENCES*dot_nhap(ms_dot_nhap)*ON*DELETE*CASCADE;
+ALTER*TABLE*xuat*ADD*FOREIGN*KEY*(dot_xuat)*REFERENCES*dot_xuat(ms_dot_xuat)*ON*DELETE*CASCADE;
+ALTER*TABLE*xuat*MODIFY*so_luong_x*DOUBLE*NOT*NULL;

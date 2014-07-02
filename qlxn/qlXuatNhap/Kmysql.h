@@ -1,13 +1,16 @@
+#ifndef _KMYSQL_HFILE_
+#define _KMYSQL_HFILE_
 #include <mysql.h>
 #include <string.h>
 #include <stdlib.h>
+#include <afxcoll.h>
 
 #include "stdafx.h"
-#include "QLXuatNhap.h"
+//#include "qlXuatNhap.h"
 // #include <stdio.h>
 // #include <winsock.h>
-// #pragma comment (lib, "libmysql.lib")
-#define BUFF_LENGTH 1024
+ #pragma comment (lib, "libmysql.lib")
+#define CKMYSQL_BUFF_LENGTH 1024
 /************************************************************************/
 /* class KMySQL                                                         */
 /************************************************************************/
@@ -77,6 +80,8 @@ public:
 	//insert a new row in the table
 	my_ulonglong	insert_row(char **_values,int number_fields);
 	my_ulonglong	insert_row(CString *_values,int number_fields);
+	my_ulonglong	insert_row(CString _table,CString *_values,int number_fields);
+	/*my_ulonglong	insert_row(CString _table,CStringArray* _values);*/
 	//load data from file to the table
 	//vd: file="d:/pet.txt" line_terminate = "\\r\\n"
 	bool		load_data(char*_file,char*_line_terminate);
@@ -124,4 +129,6 @@ public:
 	my_ulonglong	update(char**_files,char**_new_values,int _n,char* _conditon);
 	int table_id;
 	MYSQL_RES * get_res(void);
+	//CStringArray getFieldsName(void);
 };
+#endif
