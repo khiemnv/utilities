@@ -63,7 +63,7 @@ int exec(char* qryStr) {
 }
 int openDb() {
 	int ret;
-	ret = sqlite3_open("test.db", &m_db);
+	ret = sqlite3_open("test2.db", &m_db);
 	assert(ret == 0);
 	return ret;
 }
@@ -80,21 +80,20 @@ int crtTbls()
 {
 	int ret;
 	char* crtTblUser = "CREATE TABLE if not exists user(\
-			ID ROWID,\
+			ID INT PRIMARY KEY,\
 			name char(31),\
 			area_id INTEGER \
 			)";
 	ret = sqlite3_exec(m_db, crtTblUser, 0, 0, 0);
 	assert(ret == 0);
 	char* crtTblArea = "CREATE TABLE if not exists area(\
-			ID ROWID,\
+			ID INT PRIMARY KEY,\
 			name char(31),\
 			level INTEGER \
 			)";
 	ret = sqlite3_exec(m_db, crtTblArea, 0, 0, 0);
 	assert(ret == 0);
 	char* crtTblMap = "CREATE TABLE if not exists map_lv1_lv2(\
-			ID ROWID,\
 			lv1 INTEGER,\
 			lv2 INTEGER \
 			)";
@@ -111,7 +110,7 @@ int insert(char* tblName, int nFields, char* fields[], char* values[])
 	int size = MAX_STRQRY_SIZE;
 
 	//make qry
-	//INSERT INTO area(name, level)
+	//INSERT INTO area(id, name, level)
 	int len = 0;
 	len = sprintf_s(buff, size, "INSERT INTO %s(", tblName);
 	for (int i = 0; i < nFields; i++) {
@@ -119,7 +118,7 @@ int insert(char* tblName, int nFields, char* fields[], char* values[])
 	}
 	buff[len - 1] = ')';
 
-	//VALUES('area1 1', '1' );
+	//VALUES(1, 'area1 1', '1' );
 	len += sprintf_s(buff + len, size - len, " VALUES (");
 	for (int i = 0; i < nFields; i++) {
 		len += sprintf_s(buff + len, size - len, " '%s',", values[i]);
@@ -135,15 +134,17 @@ int genAreaData()
 	int ret;
 
 	char* tblName = "area";
-	char* fields[] = {"name", "level" };
+	char* fields[] = {"ID", "name", "level" };
+	char idBuff[8];
 	char areaBuff[16];
 	char lvlBuff[4] = "1";
-	//gen lvl1
-	char* values[] = { areaBuff, lvlBuff };
+	//gen area lvl1
+	char* values[] = { idBuff, areaBuff, lvlBuff };
 	for (int i = 0; i < 54; i++)
 	{
+		sprintf_s(idBuff, 8, "%d", i + 1);
 		sprintf_s(areaBuff, 16, "area1 %d", i + 1);
-		ret = insert(tblName, 2, fields, values);
+		ret = insert(tblName, 3, fields, values);
 	}
 	//gen lvl2
 	lvlBuff[0] = '2';
@@ -152,7 +153,7 @@ int genAreaData()
 	char *lvls[2] = { lv1Buff, lv2Buff };
 	char *mapFiles[] = { "lv1", "lv2" };
 
-	char *sql1 = "insert into area(name, level) Values(?, ?)";
+	char *sql1 = "insert into area(ID, name, level) Values(?, ?, ?)";
 	sqlite3_stmt *addStmt1;
 	ret = prepare_v2(sql1, &addStmt1);
 	assert(ret == SQLITE_OK);
@@ -162,21 +163,22 @@ int genAreaData()
 	assert(ret == SQLITE_OK);
 	for (int i = 0; i < 1000; i++)
 	{
-		int lv1 = rand() % 54 + 1;
-		int lv2 = i + 1;
-		sprintf_s(areaBuff, 16, "area2 %d_%d", lv1, i + 1);
+		int idLv1 = rand() % 54 + 1;
+		int idLv2 = 54 + i + 1;
+		sprintf_s(areaBuff, 16, "area2 %d_%d", idLv1, idLv2);
 		//ret = insert(tblName, 2, fields, values);
-		ret = sqlite3_bind_text(addStmt1, 1, areaBuff, -1, SQLITE_TRANSIENT);
-		ret = sqlite3_bind_int(addStmt1, 2, lv2);
+		ret = sqlite3_bind_int(addStmt1, 1, idLv2);
+		ret = sqlite3_bind_text(addStmt1, 2, areaBuff, -1, SQLITE_TRANSIENT);
+		ret = sqlite3_bind_int(addStmt1, 3, 2);
 		ret = step(addStmt1);
 		assert(ret == SQLITE_DONE);
 		ret = reset(addStmt1);
 
-		sprintf_s(lv1Buff, 8, "%d", lv1);
-		sprintf_s(lv2Buff, 8, "%d", i + 1);
+		sprintf_s(lv1Buff, 8, "%d", idLv1);
+		sprintf_s(lv2Buff, 8, "%d", idLv2);
 		//ret = insert("map_lv1_lv2", 2, mapFiles, lvls);
-		ret = sqlite3_bind_int(addStmt2, 1, lv1);
-		ret = sqlite3_bind_int(addStmt2, 2, lv2);
+		ret = sqlite3_bind_int(addStmt2, 1, idLv1);
+		ret = sqlite3_bind_int(addStmt2, 2, idLv2);
 		ret = step(addStmt2);
 		assert(ret == SQLITE_DONE);
 		ret = reset(addStmt2);
@@ -190,7 +192,7 @@ int genAreaData()
 int genUserData()
 {
 	int ret;
-	char *sql = "insert into user(name, area_id) Values(?, ?)";
+	char *sql = "insert into user(ID, name, area_id) Values(?, ?, ?)";
 	sqlite3_stmt *addStmt;
 	ret = prepare_v2(sql, &addStmt);
 	assert(ret == SQLITE_OK);
@@ -206,15 +208,17 @@ int genUserData()
 	char* lasts[] = { "Hien","Hai","An","Quang","Tuan","Dieu" };
 	for (int i = 0; i < 1000*1000; i++)
 	{
-		int areaId = rand() % 1000 + 1;
+		int userId = i + 1;
+		int areaId = 54 + (rand() % 1000 + 1);
 		int iF = rand() % (sizeof(firsts) / sizeof(char*));
 		int iM = rand() % (sizeof(mids) / sizeof(char*));
 		int iL = rand() % (sizeof(lasts) / sizeof(char*));
 		sprintf_s(nameBuff, 32, "%s %s %s", firsts[iF], mids[iM], lasts[iL]);
 		sprintf_s(areaBuff, 8, "%d", areaId);
 		//ret = insert(tblName, 2, fields, values);
-		ret = sqlite3_bind_text(addStmt, 1, nameBuff, -1, SQLITE_TRANSIENT);
-		ret = sqlite3_bind_int(addStmt, 2, areaId);
+		ret = sqlite3_bind_int(addStmt, 1, userId);
+		ret = sqlite3_bind_text(addStmt, 2, nameBuff, -1, SQLITE_TRANSIENT);
+		ret = sqlite3_bind_int(addStmt, 3, areaId);
 		ret = step(addStmt);
 		assert(ret == SQLITE_DONE);
 		ret = reset(addStmt);
@@ -236,7 +240,7 @@ int main()
 	exec("BEGIN");
 
 	//crt tbl
-	//crtTbls();
+	crtTbls();
 
 	//generate test data
 	genAreaData();
