@@ -9,6 +9,8 @@
 
 #define assert(...)
 
+#define solution 3		//1:khiem, 2:hien, 3:tung
+
 static sqlite3_api_routines s_api;
 HMODULE s_sqlite3Mod;
 static const sqlite3_api_routines *sqlite3_api = &s_api;
@@ -63,7 +65,13 @@ int exec(char* qryStr) {
 }
 int openDb() {
 	int ret;
-	ret = sqlite3_open("test2.db", &m_db);
+#if solution == 1
+	ret = sqlite3_open("test2.db", &m_db)
+#elif solution == 2
+	ret = sqlite3_open("test_hien.db", &m_db);
+#elif solution == 3
+	ret = sqlite3_open("test_tung.db", &m_db);
+#endif
 	assert(ret == 0);
 	return ret;
 }
@@ -86,6 +94,7 @@ int crtTbls()
 			)";
 	ret = sqlite3_exec(m_db, crtTblUser, 0, 0, 0);
 	assert(ret == 0);
+#if solution == 1
 	char* crtTblArea = "CREATE TABLE if not exists area(\
 			ID INT PRIMARY KEY,\
 			name char(31),\
@@ -99,6 +108,30 @@ int crtTbls()
 			)";
 	ret = sqlite3_exec(m_db, crtTblMap, 0, 0, 0);
 	assert(ret == 0);
+#elif solution == 2
+	char* crtTblArea = "CREATE TABLE if not exists area(\
+			ID INT PRIMARY KEY,\
+			kv1 INTEGER, \
+			name char(31),\
+			level INTEGER \
+			)";
+	ret = sqlite3_exec(m_db, crtTblArea, 0, 0, 0);
+	assert(ret == 0);
+#elif solution == 3
+	char* crtTblArea = "CREATE TABLE if not exists place1(\
+			ID INT PRIMARY KEY,\
+			name char(31) \
+			)";
+	ret = sqlite3_exec(m_db, crtTblArea, 0, 0, 0);
+	assert(ret == 0);
+	char* crtTblMap = "CREATE TABLE if not exists place2(\
+			ID INT PRIMARY KEY,\
+			lv1 INTEGER,\
+			name char(31) \
+			)";
+	ret = sqlite3_exec(m_db, crtTblMap, 0, 0, 0);
+	assert(ret == 0);
+#endif
 
 	return ret;
 }
@@ -132,8 +165,11 @@ int insert(char* tblName, int nFields, char* fields[], char* values[])
 int genAreaData()
 {
 	int ret;
-
+#if solution == 3
+	char* tblName = "place1";
+#elif
 	char* tblName = "area";
+#endif
 	char* fields[] = {"ID", "name", "level" };
 	char idBuff[8];
 	char areaBuff[16];
@@ -144,7 +180,11 @@ int genAreaData()
 	{
 		sprintf_s(idBuff, 8, "%d", i + 1);
 		sprintf_s(areaBuff, 16, "area1 %d", i + 1);
+#if solution == 3
+		ret = insert(tblName, 2, fields, values);
+#else
 		ret = insert(tblName, 3, fields, values);
+#endif
 	}
 	//gen lvl2
 	lvlBuff[0] = '2';
@@ -153,14 +193,22 @@ int genAreaData()
 	char *lvls[2] = { lv1Buff, lv2Buff };
 	char *mapFiles[] = { "lv1", "lv2" };
 
+#if solution == 1
 	char *sql1 = "insert into area(ID, name, level) Values(?, ?, ?)";
+#elif solution == 2
+	char *sql1 = "insert into area(ID, name, level, kv1) Values(?, ?, ?, ?)";
+#elif solution == 3
+	char *sql1 = "insert into place2(ID, name, lv1) Values(?, ?, ?)";
+#endif
 	sqlite3_stmt *addStmt1;
 	ret = prepare_v2(sql1, &addStmt1);
 	assert(ret == SQLITE_OK);
+#if solution == 1
 	char *sql2 = "insert into map_lv1_lv2(lv1, lv2) Values(?, ?)";
 	sqlite3_stmt *addStmt2;
 	ret = prepare_v2(sql2, &addStmt2);
 	assert(ret == SQLITE_OK);
+#endif
 	for (int i = 0; i < 1000; i++)
 	{
 		int idLv1 = rand() % 54 + 1;
@@ -169,11 +217,19 @@ int genAreaData()
 		//ret = insert(tblName, 2, fields, values);
 		ret = sqlite3_bind_int(addStmt1, 1, idLv2);
 		ret = sqlite3_bind_text(addStmt1, 2, areaBuff, -1, SQLITE_TRANSIENT);
+#if solution == 3
+		ret = sqlite3_bind_int(addStmt1, 3, idLv1);
+#elif
 		ret = sqlite3_bind_int(addStmt1, 3, 2);
+#endif
+#if solution == 2
+		ret = sqlite3_bind_int(addStmt1, 4, idLv1);
+#endif
 		ret = step(addStmt1);
 		assert(ret == SQLITE_DONE);
 		ret = reset(addStmt1);
 
+#if solution == 1
 		sprintf_s(lv1Buff, 8, "%d", idLv1);
 		sprintf_s(lv2Buff, 8, "%d", idLv2);
 		//ret = insert("map_lv1_lv2", 2, mapFiles, lvls);
@@ -182,11 +238,13 @@ int genAreaData()
 		ret = step(addStmt2);
 		assert(ret == SQLITE_DONE);
 		ret = reset(addStmt2);
+#endif
 	}
 
 	sqlite3_finalize(addStmt1);
+#if solution == 1
 	sqlite3_finalize(addStmt2);
-	
+#endif
 	return ret;
 }
 int genUserData()
@@ -230,7 +288,7 @@ int genUserData()
 }
 int main()
 {
-//	int ret;
+	srand(20190224);
 	
 	//open db
 	loadDbModule();
