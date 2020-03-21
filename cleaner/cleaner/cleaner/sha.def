@@ -1,0 +1,5 @@
+EXPORTS
+  SHA512Reset
+  SHA512Input
+  SHA512FinalBits
+  SHA512Result
