@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HEICConverter": {
+      "commandName": "Project",
+      "commandLineArgs": "E:\\heic\\20191028_063655200_iOS.heic"
+    }
+  }
+}
