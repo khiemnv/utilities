@@ -246,6 +246,13 @@ namespace GUI
                 {
                     Int64 curPos = m_cursor.getPos();
                     m_descr = m_cursor.getStatus();
+                    incPrgCallback((int)(curPos / m_scale), i / 10);
+                    Thread.Sleep(m_timeOut);
+                    Debug.WriteLine("{0}.m_task cur thread {1} elapsed {2} s",
+                        this,
+                        Thread.CurrentThread.ManagedThreadId,
+                        i / 10);
+                    //status
                     if (curPos == m_endPos)
                     {
                         m_state = state.completed;
@@ -256,12 +263,6 @@ namespace GUI
                         m_state = state.canceled;
                         break;
                     }
-                    incPrgCallback((int)(curPos / m_scale), i / 10);
-                    Thread.Sleep(m_timeOut);
-                    Debug.WriteLine("{0}.m_task cur thread {1} elapsed {2} s",
-                        this,
-                        Thread.CurrentThread.ManagedThreadId,
-                        i / 10);
                 }
                 closeDlgCallback();
             }

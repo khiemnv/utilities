@@ -49,6 +49,12 @@ namespace GUI
             //var refresh = Menu.MenuItems.Add("&Refresh");
             //refresh.Click += Refresh_Click;
 
+            var edit = Menu.MenuItems.Add("&Edit");
+            var rLeft = edit.MenuItems.Add("&Left(90°)");
+            rLeft.Click += RLeft_Click;
+            var rRight = edit.MenuItems.Add("&Right(90°)");
+            rRight.Click += RRight_Click;
+
             m_sc = new SplitContainer();
             m_sc.Dock = DockStyle.Fill;
             Controls.Add(m_sc);
@@ -87,6 +93,20 @@ namespace GUI
             m_sc.Panel2.Controls.Add(m_pb);
         }
 
+        private void RRight_Click(object sender, EventArgs e)
+        {
+            if (m_curImg == null) return;
+            m_curImg.Rotate(90);
+            DisplayCurImagine();
+        }
+
+        private void RLeft_Click(object sender, EventArgs e)
+        {
+            if (m_curImg == null) return;
+            m_curImg.Rotate(270);
+            DisplayCurImagine();
+        }
+
         private void M_bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
 #if use_progress_bar
@@ -100,8 +120,9 @@ namespace GUI
         {
 #if use_progress_bar
             progressBar.Value = e.ProgressPercentage;
+#else
+            m_progressDlg.m_cursor.setPos(e.ProgressPercentage);
 #endif
-            m_progressDlg.m_cursor.setPos(e.ProgressPercentage * 10);
         }
 
         class BWParam
@@ -130,10 +151,17 @@ namespace GUI
                 exportToJpg(file, newFile);
 
                 i++;
+#if use_progress_bar
                 m_bw.ReportProgress(i * 100 / par.selected.Count);
+#else
+                m_bw.ReportProgress(i);
+#endif
             }
+#if use_progress_bar
+            //delay to show progressbar 100%
             m_bw.ReportProgress(100);
             Thread.Sleep(100);
+#endif
         }
 
         private void Export_Click(object sender, EventArgs e)
@@ -220,6 +248,7 @@ namespace GUI
 
             m_progressDlg = new ProgressDlg();
             m_progressDlg.m_cursor = new cursor();
+            m_progressDlg.m_endPos = selected.Count;
             m_progressDlg.ShowDialog();
         }
         private void Refresh_Click(object sender, EventArgs e)
@@ -341,17 +370,25 @@ namespace GUI
             //throw new NotImplementedException();
             OnNodeMouseClick(sender, e);
         }
+
+        MagickImage m_curImg;
         void DisplayImagine(string path)
         {
+            MagickImage img = new MagickImage(path);
+            m_curImg = img;
+            img.Format = MagickFormat.Bmp;
+            //img.Rotate(90);
+            DisplayCurImagine();
+        }
+        void DisplayCurImagine()
+        {
+            MagickImage img = m_curImg;
             int w = m_sc.Panel2.Width;
             int h = m_sc.Panel2.Height;
             MemoryStream ms = new MemoryStream();
-            MagickImage img = new MagickImage(path);
-            //img.Rotate(90);
-            img.Format = MagickFormat.Bmp;
             double scaleH = (double)img.Height / h;
             double scaleW = (double)img.Width / w;
-            double scale = Math.Max(scaleW,scaleH);
+            double scale = Math.Max(scaleW, scaleH);
             int newW = (int)((double)img.Width / scale);
             int newH = (int)((double)img.Height / scale);
             //m_pb.Dock = DockStyle.None;
@@ -359,18 +396,24 @@ namespace GUI
             {
                 m_pb.Left = (w - newW) / 2;
                 m_pb.Top = 0;
-            }else
+            }
+            else
             {
                 m_pb.Left = 0;
                 m_pb.Top = (h - newH) / 2;
             }
             m_pb.Width = newW;
             m_pb.Height = newH;
-            img.Scale(newW, newH);
-            img.Write(ms);
+
+            //img.Scale(newW, newH);
+            //img.Write(ms);
+            //var newImg = img.Clone();
+            var newImg = img;
+            //newImg.Scale(newW, newH);
+            newImg.Write(ms);
             Image bmpImg = Image.FromStream(ms);
+            m_pb.SizeMode = PictureBoxSizeMode.Zoom;
             m_pb.Image = bmpImg;
-            
         }
         protected void OnNodeMouseClick(object sender, System.Windows.Forms.TreeNodeMouseClickEventArgs e)
         {
