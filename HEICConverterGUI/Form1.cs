@@ -49,7 +49,7 @@ namespace GUI
             //var refresh = Menu.MenuItems.Add("&Refresh");
             //refresh.Click += Refresh_Click;
 
-            m_sc= new SplitContainer();
+            m_sc = new SplitContainer();
             m_sc.Dock = DockStyle.Fill;
             Controls.Add(m_sc);
 
@@ -76,9 +76,11 @@ namespace GUI
             m_bw.WorkerReportsProgress = true;
 
             m_sc.Visible = true;
+#if use_progress_bar
             progressBar.Visible = false;
             progressBar.Dock = DockStyle.Bottom;
             Controls.Add(progressBar);
+#endif
 
             m_pb = new PictureBox();
             //m_pb.Dock = DockStyle.Fill;
@@ -87,13 +89,19 @@ namespace GUI
 
         private void M_bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+#if use_progress_bar
             progressBar.Visible = false;
+#endif
         }
-
+#if use_progress_bar
         ProgressBar progressBar = new ProgressBar();
+#endif
         private void M_bw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
+#if use_progress_bar
             progressBar.Value = e.ProgressPercentage;
+#endif
+            m_progressDlg.m_cursor.setPos(e.ProgressPercentage * 10);
         }
 
         class BWParam
@@ -164,7 +172,7 @@ namespace GUI
             }
             else
             {
-                MessageBox.Show( "No file seleted!", "Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                MessageBox.Show("No file seleted!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         void exportToJpg(string srcFile, string newFile)
@@ -177,11 +185,42 @@ namespace GUI
             }
         }
 
+        ProgressDlg m_progressDlg;
+        class cursor : ICursor
+        {
+            long m_pos;
+            string m_status = "";
+            public long getPos()
+            {
+                return m_pos;
+            }
+
+            public string getStatus()
+            {
+                return m_status;
+            }
+
+            public void setPos(long pos)
+            {
+                m_pos = pos;
+            }
+
+            public void setStatus(string msg)
+            {
+                m_status = msg;
+            }
+        }
         void exportToJpg(string des, List<string> selected, string src)
         {
+#if use_progress_bar
             progressBar.Value = 0;
             progressBar.Visible = true;
+#endif
             m_bw.RunWorkerAsync(new BWParam() { desDir = des, selected = selected, srcDir = src });
+
+            m_progressDlg = new ProgressDlg();
+            m_progressDlg.m_cursor = new cursor();
+            m_progressDlg.ShowDialog();
         }
         private void Refresh_Click(object sender, EventArgs e)
         {
@@ -223,24 +262,31 @@ namespace GUI
             if (ret == DialogResult.OK)
             {
                 m_nodeDict.Clear();
-                Queue<string> paths = new Queue<string>();
                 m_srcDir = fbd.SelectedPath;
-                paths.Enqueue(fbd.SelectedPath);
-                while (paths.Count > 0)
-                {
-                    string path = paths.Dequeue();
-                    foreach (string file in Directory.GetFiles(path, "*.heic"))
-                    {
-                        addRow('F', 0, file);
-                    }
-                    foreach (string sub in Directory.GetDirectories(path))
-                    {
-                        paths.Enqueue(sub);
-                    }
-                }
+                UInt64 size = addFolder(m_srcDir);
                 renderTree(m_nodeDict.Values.ElementAt(0));
             }
 #endif
+        }
+
+        UInt64 addFolder(string path)
+        {
+            UInt64 size = 0;
+            foreach (string file in Directory.GetFiles(path, "*.heic"))
+            {
+                var fi = new FileInfo(file);
+                size += (UInt64)fi.Length;
+                addRow('F', (UInt64)fi.Length, file, m_srcDir);
+            }
+            foreach (string sub in Directory.GetDirectories(path))
+            {
+                size += addFolder(sub);
+            }
+            if (size != 0)
+            {
+                m_nodeDict[path].size = size;
+            }
+            return size;
         }
 
         DataTable GetData()
@@ -431,10 +477,11 @@ namespace GUI
             public List<Node> childs = new List<Node>();
         }
 
-        void addRow(char type, UInt64 size, string name)
+        void addRow(char type, UInt64 size, string name, string dir = "")
         {
             var tDict = m_nodeDict;
-            var arr = name.Split(new char[] { '\\' });
+            var arr = name.Substring(dir.Length).Split(new char[] { '\\' });
+            arr[0] = dir;
             string path = arr[0];
             Node parent;
             if (tDict.ContainsKey(path))
@@ -716,5 +763,6 @@ namespace GUI
             proc.StartInfo.Verb = "open";
             proc.Start();
         }
+
     }
 }
