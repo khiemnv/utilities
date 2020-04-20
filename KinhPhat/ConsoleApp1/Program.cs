@@ -34,6 +34,7 @@ namespace ConsoleApp1
             List<MyTitle> titleLst = getTitles(conn);
             foreach(var title in titleLst) { 
                 title.paragraphLst = getTitleParagraphs(conn, title.ID);
+                //break;
             }
 
             conn.Close();
@@ -47,10 +48,11 @@ namespace ConsoleApp1
             mem.Position = 0;
             string myStr = sr.ReadToEnd();
 
-            string txt = File.ReadAllText(path + "\\" + "templ2.html");
-            myStr = myStr.Replace("\\r", "");
-            myStr = myStr.Replace("\\/", "/");
-            txt = txt.Replace("jsTxt = 'jsdata'", "jsTxt = '"+myStr+"'");
+            string txt = File.ReadAllText(path + "\\" + "templ2m.html");
+            //myStr = myStr.Replace("\\r", "");
+            //myStr = myStr.Replace("\\/", "/");
+            //myStr = myStr.Replace("\\","<br>");
+            txt = txt.Replace("var jsTxt = null;", "jsTxt = " + myStr +";");
             string titleFile = path + "\\" + "titles.html";
             var fout = File.CreateText(titleFile);
             fout.Write(txt);
@@ -141,6 +143,7 @@ namespace ConsoleApp1
             public UInt64 pathId;
             [DataMember(Name = "path", EmitDefaultValue = false)]
             public string zPath;
+            [DataMember(Name = "paragraphs", EmitDefaultValue = false)]
             public List<MyParagraph> paragraphLst;
         }
         [DataContract(Name = "MyParagraph")]
@@ -149,11 +152,17 @@ namespace ConsoleApp1
             public UInt64 ID;
             public String zTitle;
             public UInt64 titleId;
+            [DataMember(Name = "order", EmitDefaultValue = false)]
             public int order;
+            [DataMember(Name = "alignment", EmitDefaultValue = false)]
             public int alignment;
+            [DataMember(Name = "leftIndent", EmitDefaultValue = false)]
             public int leftIndent;
+            [DataMember(Name = "fontSize", EmitDefaultValue = false)]
             public int fontSize;
+            [DataMember(Name = "fontBold", EmitDefaultValue = false)]
             public int fontBold;
+            [DataMember(Name = "fontItalic", EmitDefaultValue = false)]
             public int fontItalic;
             [DataMember(Name = "content", EmitDefaultValue = false)]
             public string content;
