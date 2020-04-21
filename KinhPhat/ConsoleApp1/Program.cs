@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data;
 using System.Data.OleDb;
+using System.Diagnostics;
 
 namespace ConsoleApp1
 {
@@ -129,6 +130,15 @@ namespace ConsoleApp1
                 par.content = Convert.ToString(reader["content"]);
                 paragraphLst.Add(par);
             }
+            paragraphLst.Sort((x,y)=> { return (x.order - y.order); });
+
+            int order = 0;
+            foreach ( var par in paragraphLst)
+            {
+                Debug.Assert( par.order > order);
+                order = par.order;
+            }
+
             reader.Close();
             return paragraphLst;
         }

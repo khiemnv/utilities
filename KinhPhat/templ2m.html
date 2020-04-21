@@ -659,9 +659,16 @@
             for (i in tNode.lect.paragraphs) {
                 var par = tNode.lect.paragraphs[i];
                 var tpar = document.createElement("p");
-                tpar.style.fontStyle.bold = (par.fontBold != 0);
+                if (par.alignment == 1) {
+                    tpar.style.textAlign = 'center';
+                }
+                //if (par.fontBold != 0) {
+                //    tpar.style.fontWeight = "bold";
+                //} else {
+                //    tpar.style.fontWeight = "normal";
+                //}
                 tpar.style.paddingLeft = par.leftIndent;
-                tpar.textContent = par.content;
+                tpar.innerText = par.content.replace(/\u000b/g,'\r');
                 tDiv.appendChild(tpar);
             }
 
@@ -686,10 +693,10 @@
         //main part1//////////
         //hide frame
         var m_scale = 3 / 4;;
-        show("player", false);
-        show("mp4player", false);
-        show("mp3player", false);
-        document.getElementById("log").innerHTML = "browser: " + who();
+        //show("player", false);
+        //show("mp4player", false);
+        //show("mp3player", false);
+        //document.getElementById("log").innerHTML = "browser: " + who();
 
         //lecture
         //displayLect(lectLst);
@@ -810,7 +817,7 @@
         function adjMenuSize(ratio) {
             var m = document.getElementById('menu');
             var w = document.body.clientWidth;
-            if (ratio == 1) {
+            if (ratio < 1.5) {
                 w = 0.4 * w;
             } else {
                 w = 0.8 * w;
