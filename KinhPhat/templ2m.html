@@ -2,122 +2,80 @@
 <head>
     <title></title>
     <meta charset="utf-8" />
-    <style>
-        .txtbtn {
-            white-space: nowrap;
-        }
-
-            .txtbtn:hover, .txtbtn:visited {
-                cursor: pointer;
-                background-color: yellow;
-            }
-
-        .btn:hover {
-            cursor: pointer;
-            background-color: yellow;
-        }
-
-        .childsDiv {
-            margin-left: 10px;
-            width: auto;
-        }
-
-        img {
-            margin-right: 5px;
-        }
-
-
-        .stsImg {
-            position: relative;
-            top: 3px;
-        }
-
-        .toggleImg {
-        }
-
-        .menuDiv {
-            background-color: #DEE1E6;
-            width: auto;
-            overflow: auto;
-            height: 100%;
-        }
-    </style>
     <style type="text/css">
-        .label {
-            padding: 5px;
+        button.miBtn {
+            display: table-cell;
+            padding: 0;
+            margin: 0;
+            margin-top: 4px;
+            margin-left: 2px;
+            margin-right: 2px;
+            background-color: transparent;
+            border: none;
+            font-size: small;
+            font-family: 'MS Gothic';
+        }
+
+        span.miLabel:hover {
             color: blue;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .content {
-            width: 90%;
-            margin-left: 5%;
-            background-color: whitesmoke;
-        }
-
-        table, th, td {
-            vertical-align:top;
-            border: 0px solid black;
-            border-collapse: collapse;
-        }
-
-        .lnkBtn {
-            color: black;
-            cursor: pointer;
             text-decoration: underline;
         }
 
-            .lnkBtn:hover, .lnkBtn:visited {
-                cursor: pointer;
-                color: blue;
-                text-decoration: underline;
-            }
-            button.miBtn {
-                display:table-cell;
-                padding:0;
-                margin:0;
-                margin-top:4px;
-                margin-left:2px;
-                margin-right:2px;
-                background-color:transparent;
-                border:none;
-                font-size:small;
-                font-family:'MS Gothic';
-                width:10px;
-            }
-            span.miLabel:hover{
-                color: blue;
-                text-decoration: underline;
-            }
-            span.miLabel {
-                padding:0;
-                padding-left:2px;
-                padding-right:2px;
-                margin:0;
-                display:table-cell
-            }
-            div.menuItem {
-                width:auto;
-                display:table;
-            }
-            div.miChilds {
-                margin-left:10px;
-            }
-            div.menu{
-                background-color:rgb(209, 209, 209);
-                display:table-cell;
-                min-width:400px;
-            }
-            div.content{
-                width:auto;
-                display:table-cell;
-            }
+        span.miLabel {
+            padding: 0;
+            padding-left: 2px;
+            padding-right: 2px;
+            margin: 0;
+            display: table-cell
+        }
+
+        div.menuItem {
+            width: auto;
+            display: table;
+        }
+
+        div.miChilds {
+            margin-left: 10px;
+        }
+
+        div.menu {
+            background-color: rgb(209, 209, 209);
+            display: table-cell;
+            width: 400px;
+        }
+
+        div.content {
+            width: auto;
+            display: table-cell;
+        }
+        table,td {
+            vertical-align:top;
+            border-width:0px;
+            border-collapse: collapse;
+        }
     </style>
 </head>
-<body>
+<body　id ="body" style="font-family:'Times New Roman'">
+    <button id ="gotoTopBtn" onclick="gotoTop()" style ="position:fixed;right:2px;bottom:2px">△</button>
     <div style="padding: 5px; background-color: #808080; width: 100%">
-        <button onclick="menuShowHide()">目</button>
+        <table style="width:100%;border-width:0px;border-collapse: collapse">
+            <tr>
+                <td style="width:auto">
+                    <button style="width:auto" id="showHideMenuBtn" onclick="menuShowHide()">目</button>
+                </td>
+                <td style="width:100%">
+                    <span id="span1">Kinh Tiểu Bộ</span>
+                </td>
+                <td style="text-align:right;width:auto">
+                    <button id="fontInc" onclick="incFont()">＋</button>
+                    </td>
+                <td>
+                    <button id="fontDec" onclick="decFont()">―</button>
+                    </td><td>
+                    <button id="fontAdjBtn" onclick="adjFont()">〇</button>
+                </td>
+            </tr>
+        </table>
     </div>
     <div style="display: table; width:100%; height: 100%;">
         <div id ="menu" class="menu">
@@ -819,6 +777,100 @@
                     break;
             }
             document.getElementById("log").innerHTML = "playing:" + lnkObj.lnk;
+        }
+    </script>
+    <script>
+        //mainx1() - part x1
+        document.getElementById("gotoTopBtn").style.display = "none";
+        window.onscroll = onScroll;
+
+        //scroll
+        function onScroll() {
+            var h = document.body.scrollHeight;
+            var t = document.body.scrollTop;
+            var show = ((t * 100 / h) > 50);
+            if (show) {
+                document.getElementById("gotoTopBtn").style.display = "block";
+            }
+            else {
+                document.getElementById("gotoTopBtn").style.display = "none";
+            }
+        }
+        function gotoTop() {
+            document.body.scrollTop = 0;
+        }
+    </script>
+    <script>
+        //mainx2() - part x2
+        var ratio = window.devicePixelRatio || 1;
+        //document.getElementById("log").innerText = "ration:" + ratio;
+        adjFont(ratio);
+        adjMenuSize(ratio);
+
+        function adjMenuSize(ratio) {
+            var m = document.getElementById('menu');
+            var w = document.body.clientWidth;
+            if (ratio == 1) {
+                w = 0.4 * w;
+            } else {
+                w = 0.8 * w;
+            }
+            m.style.width = w + 'px';
+        }
+
+        //font adjust
+        function adjFont(ratio) {
+            var el = document.getElementById("span1");
+            var w = el.offsetWidth;
+            var baseW = 87;
+            var scale = baseW * 1000 / w * ratio;
+            //document.getElementById("log").innerText += " scale:" + scale;
+            chgFontSize(scale);
+        }
+        function decFont() {
+
+            //document.getElementById("log").innerText += " decFont:";
+            chgFontSize(900)
+        }
+        function incFont() {
+            //document.getElementById("log").innerText += " incFont:";
+            chgFontSize(1100)
+        }
+
+        function chgFontSize(scale) {
+            for (var i in document.childNodes) {
+                var child = document.childNodes[i];
+                chgFontSizeR(child, scale);
+            }
+        }
+        function chgFontSizeR(el, scale) {
+            for (var i in el.childNodes) {
+                var child = el.childNodes[i];
+                chgFontSizeR(child, scale);
+            }
+            var id = el.id;
+            if (id === undefined) return;
+            if (id == "") return;
+
+            var css = getComputedStyle(el, null);
+            if (css != null) {
+                var style = css.getPropertyValue("font-size");
+                var size = parseFloat(style) * scale / 1000;
+                el.style.fontSize = size + 'px';
+            }
+        }
+        function getScreenSizeInfo() {
+            var ratio = window.devicePixelRatio || 1;
+            var is_touch_device = 'ontouchstart' in document.documentElement;
+            var touch_status = (is_touch_device) ? 'touch' : 'no-touch';
+            touch_status = ' ts:' + touch_status;
+            var width_height = 'wh:' + screen.width + 'x' + screen.height;
+            var client_width_height = ' cwh:' + document.documentElement.clientWidth + 'x' + document.documentElement.clientHeight;
+            var rw = screen.width * ratio;
+            var rh = screen.height * ratio;
+            var ratio_width_height = ' r:' + ratio + ' rwh:' + rw + 'x' + rh;
+            var data_string = width_height + client_width_height + ratio_width_height + touch_status;
+            return data_string;
         }
     </script>
 </body>
