@@ -12,7 +12,7 @@
             margin-right: 2px;
             background-color: transparent;
             border: none;
-            font-size: small;
+            /*font-size: small;*/
             font-family: 'MS Gothic';
         }
 
@@ -37,15 +37,29 @@
         div.miChilds {
             margin-left: 10px;
         }
-
+        div.topCtrls {
+            position:fixed;
+            top:5px;
+            padding: 5px;
+            background-color: #808080;
+            width: 100%;
+        }
         div.menu {
+            position:fixed;
+            top:50px;
+            width: 400px;
+            height:100%;
+            overflow:scroll;
             background-color: rgb(209, 209, 209);
             display: table-cell;
-            width: 400px;
         }
 
         div.content {
-            width: auto;
+            position:fixed;
+            top:50px;
+            width: 100%;
+            height:100%;
+            overflow:scroll;
             display: table-cell;
         }
         table,td {
@@ -55,9 +69,17 @@
         }
     </style>
 </head>
-<body　id ="body" style="font-family:'Times New Roman'">
+<body　id ="body" style="font-family:'Times New Roman';margin:5px;">
+    <div id="id_content" class="content">
+            <p style="text-align:center">sentence</p>
+            <p>sentence</p>
+            <p>sentence</p>
+            <p>sentence</p>
+            <p>sentence</p>
+            <p>sentence</p>
+        </div>
     <button id ="gotoTopBtn" onclick="gotoTop()" style ="position:fixed;right:2px;bottom:2px">△</button>
-    <div style="padding: 5px; background-color: #808080; width: 100%">
+    <div id="id_topCtrls" class="topCtrls" >
         <table style="width:100%;border-width:0px;border-collapse: collapse">
             <tr>
                 <td style="width:auto">
@@ -78,8 +100,7 @@
             </tr>
         </table>
     </div>
-    <div style="display: table; width:100%; height: 100%;">
-        <div id ="menu" class="menu">
+        <div id ="id_menu" class="menu">
             <div id="root_childs" class="miChilds">
                 <div class="menuItem">
                     <button id="node1_img" class="miBtn" onclick="onImgClick('node1')">+</button>
@@ -104,15 +125,6 @@
                 </div>
             </div>
         </div>
-        <div id="content" class="content">
-            <p style="text-align:center">sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-        </div>
-    </div>
     <span id="log" style="color: gray" hidden="hidden">playing:</span>
     <script>
         //chk lnk is mp3, mp4 or youtube
@@ -219,8 +231,8 @@
         var g_nodesDict = {};
         var baseUrl = window.location.href.replace(/\/[^/]*\.html/, "");
         var imgSrc = {
-            "expand": "-",
-            "colapse": "+",
+            "expand": "＋",
+            "colapse": "―",
             "noop": "　",
             "checked": "■",
             "uncheck": "□",
@@ -588,7 +600,7 @@
         var jsTxt = null;
         if (jsTxt != null) {
             lectLst = jsTxt;
-            document.getElementById("content").innerHTML = "";
+            document.getElementById("id_content").innerHTML = "";
         }
         var url = "https://localhost:44336/api/Lectures";
         url = "https://localhost:5001/api/Lectures";
@@ -654,7 +666,7 @@
             //var src = baseUrl + "/" + titleId + ".html";
             //show("iframe2", true);
             //document.getElementById("iframe2").src = "titles/" + titleId + ".html";
-            var tDiv = document.getElementById("content");
+            var tDiv = document.getElementById("id_content");
             renderTitle(tNode.lect.paragraphs, tDiv);
 
             menuShowHide();
@@ -685,7 +697,7 @@
         var menuVisible = true;
         function menuShowHide() {
             menuVisible = !menuVisible;
-            var tdiv = document.getElementById("menu");
+            var tdiv = document.getElementById("id_menu");
             if (menuVisible) {
                 tdiv.style.display = "table-cell";
             } else {
@@ -794,11 +806,11 @@
         //mainx1() - part x1
         document.getElementById("gotoTopBtn").style.display = "none";
         window.onscroll = onScroll;
-
+        document.getElementById("id_content").onscroll = onscroll;
         //scroll
-        function onScroll() {
-            var h = document.body.scrollHeight;
-            var t = document.body.scrollTop;
+        function onScroll(e) {
+            var h = e.target.scrollHeight;
+            var t = e.target.scrollTop;
             var show = ((t * 100 / h) > 50);
             if (show) {
                 document.getElementById("gotoTopBtn").style.display = "block";
@@ -808,7 +820,32 @@
             }
         }
         function gotoTop() {
-            document.body.scrollTop = 0;
+            document.getElementById("id_content").scrollTop = 0;
+        }
+    </script>
+    <script>
+        //adjust ctrl pos
+        function adjCtrlsPos() {
+            adjTopCtrlsPos();
+            adjContentPos();
+            adjMenuPos();
+        }
+
+        function adjTopCtrlsPos() {
+            var d = document.getElementById("id_topCtrls");
+            d.style.width = document.body.offsetWidth - 10 + "px";
+
+        }
+        function adjContentPos() {
+            var d_topCtrls = document.getElementById("id_topCtrls");
+            var d = document.getElementById("id_content");
+            d.style.top = d_topCtrls.offsetTop + d_topCtrls.offsetHeight;
+            d.style.width = document.body.clientWidth - 10 + "px";
+        }
+        function adjMenuPos() {
+            var d_topCtrls = document.getElementById("id_topCtrls");
+            var d = document.getElementById("id_menu");
+            d.style.top = d_topCtrls.offsetTop + d_topCtrls.offsetHeight;
         }
     </script>
     <script>
@@ -819,7 +856,7 @@
         adjMenuSize(ratio);
 
         function adjMenuSize(ratio) {
-            var m = document.getElementById('menu');
+            var m = document.getElementById("id_menu");
             var w = document.body.clientWidth;
             if (ratio < 1.5) {
                 w = 0.4 * w;
@@ -837,15 +874,17 @@
             var scale = baseW * 1000 / w * ratio;
             //document.getElementById("log").innerText += " scale:" + scale;
             chgFontSize(scale);
+            adjCtrlsPos();
         }
         function decFont() {
-
             //document.getElementById("log").innerText += " decFont:";
             chgFontSize(900)
+            adjCtrlsPos();
         }
         function incFont() {
             //document.getElementById("log").innerText += " incFont:";
             chgFontSize(1100)
+            adjCtrlsPos();
         }
 
         function chgFontSize(scale) {
@@ -884,5 +923,6 @@
             return data_string;
         }
     </script>
+
 </body>
 </html>
