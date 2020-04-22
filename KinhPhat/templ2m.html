@@ -71,7 +71,8 @@
                     </td>
                 <td>
                     <button id="fontDec" onclick="decFont()">―</button>
-                    </td><td>
+                    </td>
+                <td>
                     <button id="fontAdjBtn" onclick="adjFont()">〇</button>
                 </td>
             </tr>
@@ -654,27 +655,30 @@
             //show("iframe2", true);
             //document.getElementById("iframe2").src = "titles/" + titleId + ".html";
             var tDiv = document.getElementById("content");
-            tDiv.innerHTML = "";
-            var i;
-            for (i in tNode.lect.paragraphs) {
-                var par = tNode.lect.paragraphs[i];
-                var tpar = document.createElement("p");
-                if (par.alignment == 1) {
-                    tpar.style.textAlign = 'center';
-                }
-                //if (par.fontBold != 0) {
-                //    tpar.style.fontWeight = "bold";
-                //} else {
-                //    tpar.style.fontWeight = "normal";
-                //}
-                tpar.style.paddingLeft = par.leftIndent;
-                tpar.innerText = par.content.replace(/\u000b/g,'\r');
-                tDiv.appendChild(tpar);
-            }
+            renderTitle(tNode.lect.paragraphs, tDiv);
 
             menuShowHide();
         }
 
+        function renderTitle(pars, tDiv) {
+            tDiv.textContent = "";
+            for (var i in pars) {
+                var par = pars[i];
+                var el = document.createElement("p");
+                if (par.alignment == 1) {
+                    el.style.textAlign = 'center';
+                }
+                if (par.fontBold == -1) {
+                    el.style.fontWeight = "bold";
+                }
+                if (par.fontItalic == -1) {
+                    el.style.fontStyle = "italic";
+                }
+                el.style.paddingLeft = par.leftIndent;
+                el.innerText = par.content.replace(/\u000b/g, '\r');
+                tDiv.appendChild(el);
+            }
+        }
     </script>
     <script>
         //show hide menu
