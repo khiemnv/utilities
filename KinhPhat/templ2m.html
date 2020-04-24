@@ -246,6 +246,7 @@
         //init var part2///////
         //tree
         var g_nodesDict = {};
+        var g_titlesDict = {};
         var baseUrl = window.location.href.replace(/\/[^/]*\.html/, "");
         var imgSrc = {
             "expand": "＋",
@@ -377,6 +378,7 @@
 
             child.childs = null;
             child.lect = lectItem;
+            g_titlesDict[lectItem.ID] = child;  //for restore sts
 
             //render nodes
             for (var i in renderLst) {
@@ -509,9 +511,15 @@
             switch (tNode.sts) {
                 case 0:
                     src = imgSrc.uncheck;
+                    //if (tNode.lect != null) {
+                    //    alert("ucheck:" + tNode.lect.ID)
+                    //}
                     break;
                 case 1:
                     src = imgSrc.checked;
+                    //if (tNode.lect != null) {
+                    //    alert("check:" + tNode.lect.ID)
+                    //}
                     break;
                 default:
                     src = imgSrc.gray;
@@ -658,6 +666,17 @@
             //display selected
             //var tLst = getSelected(rootNode);
             //displayLect(tLst);
+
+            //save selected title id
+            var sels = [];
+            for (var i in g_nodesDict) {
+                tNode = g_nodesDict[i];
+                if (tNode.sts == 1 && tNode.lect != null) {
+                    sels.push(tNode.lect.ID);
+                }
+            }
+            stsSetSelected(sels);
+            stsSave();
         }
 
         function getSelected(rootNode) {
@@ -679,6 +698,8 @@
 
         function onSpanClick(nodeId) {
             var tNode = g_nodesDict[nodeId];
+            if (tNode.lect == null) return;
+
             var titleId = tNode.lect.ID;
             //var src = baseUrl + "/" + titleId + ".html";
             //show("iframe2", true);
@@ -687,6 +708,8 @@
             renderTitle(tNode.lect.paragraphs, tDiv);
 
             menuShowHide();
+            stsSetCurTitle(tNode.lect.ID);
+            stsSave();
         }
 
         function renderTitle(pars, tDiv) {
@@ -1049,6 +1072,71 @@
             return data_string;
         }
     </script>
+    <script>
+        //cookie
+        var g_stsData = {
+            "selTitles": [],
+            "curTitle": 0,
+        };
+        restore();
 
+        function restore() {
+            stsRestore();
+
+            //selected
+            var sels = g_stsData.selTitles;
+            for (var i in sels) {
+                var id = sels[i];
+                var tNode = g_titlesDict[id];
+                //onStsClick(node.id);
+                if (tNode.sts == 1) {
+                    tNode.sts = 0;
+                } else {
+                    tNode.sts = 1;
+                }
+                updateStsImg(tNode);
+                updateChildSts(tNode);
+                updateParentSts(tNode.parent, tNode.sts);
+            }
+            //current title
+            if (g_stsData.curTitle != 0) {
+                var tNode = g_titlesDict[g_stsData.curTitle];
+                var tDiv = document.getElementById("id_content");
+                renderTitle(tNode.lect.paragraphs, tDiv);
+            }
+        }
+
+        function stsSetCurTitle(id) {
+            g_stsData.curTitle = id;
+        }
+        function stsSetSelected(sels) {
+            g_stsData.selTitles = sels;
+        }
+        function stsAddSelected(id) {
+            g_stsData.push(id);
+        }
+        function stsDelSelected(id) {
+            var a = g_stsData.selTitles;
+            for (var i in a) {
+                if (a[i] == id) {
+                    a.splice(i, 1);
+                    break;
+                }
+            }
+        }
+        function stsRestore() {
+            var a = document.cookie.split(";");
+            if (a.length > 0) {
+                g_stsData = JSON.parse(a[0]);
+            }
+        }
+        function stsSave() {
+            var txt = JSON.stringify(g_stsData);
+            var dt = new Date();
+            dt.setDate(dt.getDate() + 7);
+            document.cookie = txt;
+            document.cookie = "expires="+dt.toUTCString();
+        }
+    </script>
 </body>
 </html>
