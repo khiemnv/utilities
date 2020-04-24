@@ -64,9 +64,10 @@ namespace ConsoleApp1
         {
             var titleLst = new List<MyTitle>();
             //get title
-            var qry = "select * from titles INNER JOIN paths ON titles.pathId = paths.ID";
+            var qry = "select * from titles INNER JOIN paths ON titles.pathId = paths.ID order by ord ASC";
             var cmd = new OleDbCommand(qry, cnn);
             var reader = cmd.ExecuteReader();
+            int ord = 0;
             while (reader.Read())
             {
                 var title = new MyTitle();
@@ -75,7 +76,10 @@ namespace ConsoleApp1
                 title.pathId = Convert.ToUInt64(reader["pathId"]);
                 title.zPath = Convert.ToString(reader["path"]);
                 title.zPath += "/" + title.zTitle;
+                title.ord = Convert.ToInt32(reader["ord"]);
                 titleLst.Add(title);
+                Debug.Assert(title.ord > ord);
+                ord = title.ord;
             }
             reader.Close();
             return titleLst;
@@ -155,6 +159,7 @@ namespace ConsoleApp1
             public string zPath;
             [DataMember(Name = "paragraphs", EmitDefaultValue = false)]
             public List<MyParagraph> paragraphLst;
+            public int ord;
         }
         [DataContract(Name = "MyParagraph")]
         class MyParagraph
