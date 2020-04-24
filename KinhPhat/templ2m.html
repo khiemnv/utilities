@@ -71,60 +71,77 @@
 </head>
 <body　id ="body" style="font-family:'Times New Roman';margin:5px;">
     <div id="id_content" class="content">
-            <p style="text-align:center">sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-            <p>sentence</p>
-        </div>
-    <button id ="gotoTopBtn" onclick="gotoTop()" style ="position:fixed;right:2px;bottom:2px">△</button>
+        <p style="text-align: center">sentence</p>
+        <p>sentence</p>
+        <p>sentence</p>
+        <p>sentence</p>
+        <p>sentence</p>
+        <p>sentence</p>
+    </div>
+    <button id ="id_gotoTopBtn" onclick="gotoTop()" style ="position:fixed;right:2px;bottom:2px">△</button>
     <div id="id_topCtrls" class="topCtrls" >
         <table style="width:100%;border-width:0px;border-collapse: collapse">
             <tr>
-                <td style="width:auto">
-                    <button style="width:auto" id="showHideMenuBtn" onclick="menuShowHide()">目</button>
+                <td style="width: auto">
+                    <button style="width: auto" id="showHideMenuBtn" onclick="menuShowHide()">目</button>
                 </td>
-                <td style="width:100%">
-                    <span id="span1">Kinh Tiểu Bộ</span>
+                <td>
+                    <span id="span1" style="white-space:nowrap">Kinh Tiểu Bộ</span>
                 </td>
-                <td style="text-align:right;width:auto">
+                <td style="width: 100%"></td>
+                <td>
                     <button id="fontInc" onclick="incFont()">＋</button>
-                    </td>
+                </td>
                 <td>
                     <button id="fontDec" onclick="decFont()">―</button>
-                    </td>
+                </td>
                 <td>
-                    <button id="fontAdjBtn" onclick="adjFont()">〇</button>
+                    <button id="fontAdjBtn" onclick="onAdjFont()">〇</button>
                 </td>
             </tr>
         </table>
     </div>
-        <div id ="id_menu" class="menu">
-            <div id="root_childs" class="miChilds">
+    <div id="id_botCtrls" style="position:fixed;bottom:10px;right:10px">
+        <table style="width: 100%; border-width: 0px; border-collapse: collapse">
+            <tr>
+                <td style="width:100%"></td>
+                <td>
+                    <button id="id_playContent" onclick="onPlayContent()">⏯️</button>
+                </td>
+                <td>
+                    <button id="id_stopSpeek" onclick="onStopSpeek()">⏹️</button>
+                </td>
+                <td>
+                    <span id="id_playContentSts" style="font-family:'MS Gothic'">stoped&nbsp;</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="id_menu" class="menu">
+        <div id="root_childs" class="miChilds">
+            <div class="menuItem">
+                <button id="node1_img" class="miBtn" onclick="onImgClick('node1')">+</button>
+                <button id="node1_sts" class="miBtn" onclick="onStsClick('node1')">□</button>
+                <span id="node1_span" class="miLabel" onclick="onSpanClick('node1')">node1</span>
+            </div>
+            <div id="node1_childs" class="miChilds">
                 <div class="menuItem">
-                    <button id="node1_img" class="miBtn" onclick="onImgClick('node1')">+</button>
-                    <button id="node1_sts" class="miBtn" onclick="onStsClick('node1')">□</button>
-                    <span id="node1_span" class="miLabel" onclick="onSpanClick('node1')">node1</span>
-                </div>
-                <div id="node1_childs"class="miChilds">
-                    <div class="menuItem">
                     <button id="node1_1_img" class="miBtn" onclick="onImgClick('node1')">+</button>
                     <button id="node1_1_sts" class="miBtn" onclick="onStsClick('node1')">□</button>
                     <span id="node1_1_span" class="miLabel" onclick="onSpanClick('node1')">node1.1</span>
                 </div>
-                <div id="node1_1_childs"class="miChilds">
-                </div>
-                </div>
-                <div class="menuItem">
-                    <button id="node2_img" class="miBtn" onclick="onImgClick('node1')">+</button>
-                    <button id="node2_sts" class="miBtn" onclick="onStsClick('node1')">□</button>
-                    <span id="node2_span" class="miLabel" onclick="onSpanClick('node1')">node2</span>
-                </div>
-                <div id="node2_childs"class="miChilds">
+                <div id="node1_1_childs" class="miChilds">
                 </div>
             </div>
+            <div class="menuItem">
+                <button id="node2_img" class="miBtn" onclick="onImgClick('node1')">+</button>
+                <button id="node2_sts" class="miBtn" onclick="onStsClick('node1')">□</button>
+                <span id="node2_span" class="miLabel" onclick="onSpanClick('node1')">node2</span>
+            </div>
+            <div id="node2_childs" class="miChilds">
+            </div>
         </div>
+    </div>
     <span id="log" style="color: gray" hidden="hidden">playing:</span>
     <script>
         //chk lnk is mp3, mp4 or youtube
@@ -692,6 +709,75 @@
             }
         }
     </script>
+    <script src='https://code.responsivevoice.org/responsivevoice.js'></script>
+    <script>
+        //text to speek
+        var g_speekState = 0; //stoped
+
+        function onPlayContent() {
+            var btn = document.getElementById("id_playContent");
+            var spn = document.getElementById("id_playContentSts");
+            switch (g_speekState) {
+                case 0: //stoped ->play
+                    spn.innerText = "playing";
+                    g_speekState = 1;
+                    var txt = document.getElementById("id_content").innerText;
+                    playSpeek(txt);
+                    btn.textContent = "⏸️";
+                    break;
+                case 1: //play ->pause
+                    spn.innerHTML = "paused&nbsp;";
+                    g_speekState = 2;
+                    pauseSpeek();
+                    //btn.innerText = "⏯️";
+                    btn.textContent = "⏯️";
+                    break;
+                case 2: //pause ->play
+                    spn.innerText = "playing";
+                    g_speekState = 1;
+                    resumeSpeek();
+                    btn.innerHTML = "⏸️";
+                    break;
+            }
+        }
+        function onStopSpeek() {
+            var btn = document.getElementById("id_playContent");
+            var spn = document.getElementById("id_playContentSts");
+            switch (g_speekState) {
+                case 1:
+                case 2:
+                case 3:
+                    spn.innerHTML = "stoped&nbsp;";
+                    g_speekState = 0;
+                    stopSpeek();
+                    btn.textContent = "⏯️";
+                    break;
+            }
+        }
+        function onSpeedBegin() {
+            //alert("onbegin");
+        }
+        function onSpeekEnd() {
+            //alert("onend");
+            onStopSpeek();
+        }
+        function pauseSpeek() {
+            responsiveVoice.pause();
+        }
+        function resumeSpeek() {
+            responsiveVoice.resume();
+        }
+        function stopSpeek() {
+            responsiveVoice.cancel();
+        }
+        function playSpeek(txt) {
+            var parameters = {
+                onstart: onSpeedBegin,
+                onend: onSpeekEnd
+            }
+            responsiveVoice.speak(txt, "Vietnamese Female", parameters);
+        }
+    </script>
     <script>
         //show hide menu
         var menuVisible = true;
@@ -804,7 +890,7 @@
     </script>
     <script>
         //mainx1() - part x1
-        document.getElementById("gotoTopBtn").style.display = "none";
+        document.getElementById("id_gotoTopBtn").style.display = "none";
         window.onscroll = onScroll;
         document.getElementById("id_content").onscroll = onscroll;
         //scroll
@@ -813,10 +899,10 @@
             var t = e.target.scrollTop;
             var show = ((t * 100 / h) > 50);
             if (show) {
-                document.getElementById("gotoTopBtn").style.display = "block";
+                document.getElementById("id_gotoTopBtn").style.display = "block";
             }
             else {
-                document.getElementById("gotoTopBtn").style.display = "none";
+                document.getElementById("id_gotoTopBtn").style.display = "none";
             }
         }
         function gotoTop() {
@@ -850,23 +936,63 @@
     </script>
     <script>
         //mainx2() - part x2
-        var ratio = window.devicePixelRatio || 1;
+        var g_ratio = window.devicePixelRatio || 1;
         //document.getElementById("log").innerText = "ration:" + ratio;
-        adjFont(ratio);
-        adjMenuSize(ratio);
+        adjFont(g_ratio);
+        //adjMenuSize(g_ratio);
+        window.onresize = ctrlsResize;
+        //ctrlsResize();
 
-        function adjMenuSize(ratio) {
-            var m = document.getElementById("id_menu");
-            var w = document.body.clientWidth;
-            if (ratio < 1.5) {
-                w = 0.4 * w;
-            } else {
-                w = 0.8 * w;
-            }
-            m.style.width = w + 'px';
+        function ctrlsResize() {
+            var cw = document.body.clientWidth;
+            var ch = document.body.clientHeight;
+            var l = 5;
+            var r = 5;
+            var t = 5;
+            var b = 5;
+            //top ctrls
+            w = cw - l - r;
+            var topctrls = document.getElementById("id_topCtrls");
+            topctrls.style.top = t;
+            topctrls.style.left = l;
+            topctrls.style.width = w;
+            //menu
+            t += topctrls.offsetHeight;
+            h = ch - t - b;
+            var menu = document.getElementById("id_menu");
+            menu.style.top = t;
+            menu.style.height = h;
+            menu.style.width = (g_ratio < 1.5) ? 0.4 * w : 0.8 * w;
+            //content
+            var cont = document.getElementById("id_content");
+            cont.style.left = l;
+            cont.style.width = w;
+            cont.style.height = h;
+            //bot ctrls
+            var botctrls = document.getElementById("id_botCtrls");
+            botctrls.style.right = r;
+            botctrls.style.bottom = b;
+            //goto top btn
+            var gtbtn = document.getElementById("id_gotoTopBtn")
+            gtbtn.style.right = r;
+            gtbtn.style.bottom = b + botctrls.offsetHeight;
         }
 
+        //function adjMenuSize(ratio) {
+        //    var m = document.getElementById("id_menu");
+        //    var w = document.body.clientWidth;
+        //    if (ratio < 1.5) {
+        //        w = 0.4 * w;
+        //    } else {
+        //        w = 0.8 * w;
+        //    }
+        //    m.style.width = w + 'px';
+        //}
+
         //font adjust
+        function onAdjFont() {
+            adjFont(g_ratio);
+        }
         function adjFont(ratio) {
             var el = document.getElementById("span1");
             var w = el.offsetWidth;
@@ -874,17 +1000,17 @@
             var scale = baseW * 1000 / w * ratio;
             //document.getElementById("log").innerText += " scale:" + scale;
             chgFontSize(scale);
-            adjCtrlsPos();
+            ctrlsResize();
         }
         function decFont() {
             //document.getElementById("log").innerText += " decFont:";
             chgFontSize(900)
-            adjCtrlsPos();
+            ctrlsResize();
         }
         function incFont() {
             //document.getElementById("log").innerText += " incFont:";
             chgFontSize(1100)
-            adjCtrlsPos();
+            ctrlsResize();
         }
 
         function chgFontSize(scale) {
