@@ -37,6 +37,8 @@
         div.miChilds {
             margin-left: 10px;
         }
+    </style>
+    <style>
         div.topCtrls {
             position:fixed;
             top:5px;
@@ -67,6 +69,9 @@
             border-width:0px;
             border-collapse: collapse;
         }
+        button.fontBtn {
+            font-family:'MS Gothic';
+        }
     </style>
 </head>
 <body　id="body" style="font-family:'Times New Roman';margin:5px;">
@@ -90,13 +95,13 @@
                 </td>
                 <td style="width: 100%"></td>
                 <td>
-                    <button id="fontInc" onclick="incFont()">＋</button>
+                    <button id="fontInc" class="fontBtn" onclick="incFont()">＋</button>
                 </td>
                 <td>
-                    <button id="fontDec" onclick="decFont()">―</button>
+                    <button id="fontDec" class="fontBtn" onclick="decFont()">―</button>
                 </td>
                 <td>
-                    <button id="fontAdjBtn" onclick="onAdjFont()">〇</button>
+                    <button id="fontAdjBtn" class="fontBtn" onclick="onAdjFont()">〇</button>
                 </td>
             </tr>
         </table>
