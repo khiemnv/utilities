@@ -16,6 +16,8 @@ namespace WindowsFormsApp1
         {
             var fxLib = IntPtr.Size == 8 ? "Firefox64" : "Firefox86";
             Gecko.Xpcom.Initialize(fxLib);
+            var settings = new CefSharp.WinForms.CefSettings();
+            CefSharp.Cef.Initialize(settings);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());

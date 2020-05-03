@@ -1,4 +1,5 @@
-﻿#define use_gecko
+﻿//#define use_gecko
+#define use_chromium
 
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace WindowsFormsApp1
 #if use_gecko
         protected Gecko.GeckoWebBrowser m_wb;
 #elif use_chromium
-        protected ChromiumWebBrowser m_wb;
+        protected CefSharp.WinForms.ChromiumWebBrowser m_wb;
 #else
         protected WebBrowser m_wb;
 #endif
@@ -42,6 +43,8 @@ namespace WindowsFormsApp1
             var file = Menu.MenuItems.Add("&File");
             var open = file.MenuItems.Add("&Open");
             open.Click += Open_Click;
+            var preview = file.MenuItems.Add("&Preview");
+            preview.Click += Preview_Click;
             var export = file.MenuItems.Add("&Export");
             export.Click += Export_Click;
 
@@ -71,12 +74,7 @@ namespace WindowsFormsApp1
             var wb = new Gecko.GeckoWebBrowser();
             wb.LoadHtml("<html><body></body></html>", "http://blank");
 #elif use_chromium
-            if (!Cef.IsInitialized)
-            {
-                var settings = new CefSettings();
-                CefSharp.Cef.Initialize(settings);
-            }
-            var wb = new ChromiumWebBrowser("");
+            var wb = new CefSharp.WinForms.ChromiumWebBrowser("");
 #else
             var wb = new WebBrowser();
 #endif
@@ -84,6 +82,7 @@ namespace WindowsFormsApp1
             m_wb = wb;
             m_sc.Panel2.Controls.Add(m_wb);
         }
+
         #region db
         class pathItem
         {
@@ -254,7 +253,7 @@ namespace WindowsFormsApp1
         {
 #if true
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "heic files (*.accdb)|*.accdb";
+            ofd.Filter = "access files (*.accdb)|*.accdb";
             //ofd.Multiselect = true;
             var ret = ofd.ShowDialog();
             if (ret == DialogResult.OK)
@@ -263,15 +262,49 @@ namespace WindowsFormsApp1
                 var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
                 m_cnnStr = cnnStr.Replace("<db>", m_db);
 
+                //clear tree
+                m_nodeDict.Clear();
+                m_tree.Nodes.Clear();
+
                 var titles = getTitles();
                 addTitles(titles);
                 renderTree(m_nodeDict.Values.ElementAt(0));
             }
 #endif
         }
+
+        private void Preview_Click(object sender, EventArgs e)
+        {
+            var selected = getSelectedTitles();
+            if (selected.Count > 0)
+            {
+                string jsTxt = titlesLstToJson(selected);
+                string htmlTxt = genHtmlTxt(jsTxt);
+                UpdateWB(htmlTxt);
+            }
+        }
         private void Export_Click(object sender, EventArgs e)
         {
             //get selected item
+            var selected = getSelectedTitles();
+            if (selected.Count != 0)
+            {
+                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+                saveFileDialog1.Filter = "html files (*.html)|*.html|All files (*.*)|*.*";
+                saveFileDialog1.FilterIndex = 1;
+                saveFileDialog1.RestoreDirectory = true;
+                if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    exportTitles(saveFileDialog1.FileName, selected);
+                }
+            }
+            else
+            {
+                MessageBox.Show("No title seleted!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        List<MyTitle> getSelectedTitles()
+        {
             List<MyTitle> selected = new List<MyTitle>();
             Queue<TreeNodeCollection> q = new Queue<TreeNodeCollection>();
             q.Enqueue(m_tree.Nodes);
@@ -294,22 +327,7 @@ namespace WindowsFormsApp1
                     }
                 }
             }
-
-            if (selected.Count != 0)
-            {
-                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
-                saveFileDialog1.Filter = "html files (*.html)|*.html|All files (*.*)|*.*";
-                saveFileDialog1.FilterIndex = 1;
-                saveFileDialog1.RestoreDirectory = true;
-                if (saveFileDialog1.ShowDialog() == DialogResult.OK)
-                {
-                    exportTitles(saveFileDialog1.FileName, selected);
-                }
-            }
-            else
-            {
-                MessageBox.Show("No title seleted!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            return selected;
         }
         void exportTitles(string path, List<MyTitle> selected)
         {
@@ -321,6 +339,7 @@ namespace WindowsFormsApp1
         {
             var tNode = m_nodeDict[key];
             var title = tNode.title;
+            if (title == null) { return; }
             //m_rtb.Clear();
             //foreach(var par in title.paragraphLst)
             //{
@@ -369,12 +388,12 @@ namespace WindowsFormsApp1
 
         protected void UpdateWB(string htmlTxt)
         {
-#if use_gecko
             string filename = string.Format(@"{0}{1}", Path.GetTempPath(), "page.htm");
             File.WriteAllText(filename, htmlTxt);
+#if use_gecko
             m_wb.Navigate(filename);
 #elif use_chromium
-            m_wb.LoadHtml(htmlTxt, "http://test/page");
+            m_wb.Load(filename);
 #else
             m_wb.DocumentText = htmlTxt;
 #endif
@@ -444,6 +463,7 @@ namespace WindowsFormsApp1
                     parent.childs.Add(child);
                 }
 
+                parent.size++;
                 parent = child;
             }
             parent.size = size;
@@ -452,7 +472,7 @@ namespace WindowsFormsApp1
         }
         TreeNode CreateTreeNode(Node node)
         {
-            if (node.type == 'T') { node.size = (UInt64)node.childs.Count; }
+            //if (node.type != 'T') { node.size = (UInt64)node.childs.Count; }
             string name = string.Format("{0} ({1})", node.name, node.size);
             TreeNode newNode = new TreeNode(name)
             {

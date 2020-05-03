@@ -768,6 +768,11 @@
             }
             PlayContent();
         }
+        function onNextTitle() {
+            StopSpeek();
+            g_playingPar = g_playingTitle.paragraphs.length - 1;
+            PlayContent();
+        }
         function onPrevTitle() {
             StopSpeek();
             g_playingPar = 0;
