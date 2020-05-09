@@ -9,13 +9,33 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Data.OleDb;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace ConsoleApp1
 {
     class Program
     {
+        static int getNo(string txt)
+        {
+            Regex reg = new Regex("([IVXLC]+)|một|hai|ba|bốn|năm|sáu|bảy|tám|chín|mười|mươi");
+            var mc = reg.Matches(txt);
+            string zNo = mc[0].Groups[0].Value;
+            zNo = zNo.Replace("XC", "+90");
+            zNo = zNo.Replace("XL", "+40");
+            zNo = zNo.Replace("IV", "+4");
+            zNo = zNo.Replace("IX", "+9");
+            zNo = zNo.Replace("I", "+1");
+            zNo = zNo.Replace("V", "+5");
+            zNo = zNo.Replace("X", "+10");
+            zNo = zNo.Replace("L", "+50");
+            zNo = zNo.Replace("C", "+100");
+            var arr = zNo.Split(new char[] {'+'}, StringSplitOptions.RemoveEmptyEntries);
+        }
         static void Main(string[] args)
         {
+            //test parse no
+
+            return;
             //connect to db
             var path = Environment.CurrentDirectory;
             string zDb = "kinhtang.accdb";

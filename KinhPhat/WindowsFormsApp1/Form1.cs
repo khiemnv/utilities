@@ -26,6 +26,7 @@ namespace WindowsFormsApp1
         BackgroundWorker m_bw;
         SplitContainer m_sc;
         RichTextBox m_rtb;
+        List<MyTitle> m_titles;
 #if use_gecko
         protected Gecko.GeckoWebBrowser m_wb;
 #elif use_chromium
@@ -98,8 +99,11 @@ namespace WindowsFormsApp1
             var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                pathLst.Add(new pathItem() { id = Convert.ToUInt64(reader["ID"]),
-                    path = Convert.ToString(reader["path"]) });
+                pathLst.Add(new pathItem()
+                {
+                    id = Convert.ToUInt64(reader["ID"]),
+                    path = Convert.ToString(reader["path"])
+                });
             }
             reader.Close();
 
@@ -108,7 +112,7 @@ namespace WindowsFormsApp1
             var qry2 = "select * from titles WHERE pathId = @pathId order by ord ASC";
             var cmd2 = new OleDbCommand(qry2, cnn);
             cmd2.Parameters.Add("@pathId", OleDbType.BigInt);
-            foreach(var pi in pathLst)
+            foreach (var pi in pathLst)
             {
                 cmd2.Parameters[0].Value = pi.id;
                 var reader2 = cmd2.ExecuteReader();
@@ -127,7 +131,7 @@ namespace WindowsFormsApp1
                 }
                 reader2.Close();
             }
-            
+
             return titleLst;
         }
 
@@ -143,7 +147,7 @@ namespace WindowsFormsApp1
             {
                 var par = new MyParagraph();
                 par.titleId = Convert.ToUInt64(reader["titleId"]);
-                par.order = Convert.ToInt32(reader["order"]);
+                par.order = Convert.ToInt32(reader["ord"]);
                 par.alignment = Convert.ToInt32(reader["alignment"]);
                 par.leftIndent = Convert.ToInt32(reader["leftIndent"]);
                 par.fontSize = Convert.ToInt32(reader["fontSize"]);
@@ -165,41 +169,7 @@ namespace WindowsFormsApp1
             return paragraphLst;
         }
 
-        [DataContract(Name = "MyTitle")]
-        class MyTitle
-        {
-            [DataMember(Name = "ID", EmitDefaultValue = false)]
-            public UInt64 ID;
-            [DataMember(Name = "title", EmitDefaultValue = false)]
-            public string zTitle;
-            public UInt64 pathId;
-            [DataMember(Name = "path", EmitDefaultValue = false)]
-            public string zPath;
-            [DataMember(Name = "paragraphs", EmitDefaultValue = false)]
-            public List<MyParagraph> paragraphLst;
-            public int ord;
-        }
-        [DataContract(Name = "MyParagraph")]
-        class MyParagraph
-        {
-            public UInt64 ID;
-            public String zTitle;
-            public UInt64 titleId;
-            [DataMember(Name = "order", EmitDefaultValue = false)]
-            public int order;
-            [DataMember(Name = "alignment", EmitDefaultValue = false)]
-            public int alignment;
-            [DataMember(Name = "leftIndent", EmitDefaultValue = false)]
-            public int leftIndent;
-            [DataMember(Name = "fontSize", EmitDefaultValue = false)]
-            public int fontSize;
-            [DataMember(Name = "fontBold", EmitDefaultValue = false)]
-            public int fontBold;
-            [DataMember(Name = "fontItalic", EmitDefaultValue = false)]
-            public int fontItalic;
-            [DataMember(Name = "content", EmitDefaultValue = false)]
-            public string content;
-        }
+
         static XmlObjectSerializer createSerializer(Type type)
         {
             Type[] knownTypes = new Type[] {
@@ -223,7 +193,7 @@ namespace WindowsFormsApp1
             List<MyTitle> titleLst = getTitles(conn);
             foreach (var title in titleLst)
             {
-                title.paragraphLst = getTitleParagraphs(conn, title.ID);
+                //title.paragraphLst = getTitleParagraphs(conn, title.ID);
                 //break;
             }
 
@@ -239,15 +209,21 @@ namespace WindowsFormsApp1
         }
         private void Tree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            TreeNode tn = e.Node;
-            string path = (string)tn.Tag;
-            bool ret = System.IO.File.Exists(path);
-            Process proc = new Process();
-            proc.StartInfo.FileName = path;
-            proc.StartInfo.UseShellExecute = true;
-            //proc.StartInfo.Arguments = path;
-            proc.StartInfo.Verb = "open";
-            //proc.Start();
+            var title = m_nodeDict[(string)e.Node.Tag].title;
+            if (title == null) return;
+
+            //edit
+            TitleEdt edt = new TitleEdt();
+            edt.m_title = new MyTitle() { ID = title.ID };
+
+            //var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
+            //cnnStr = cnnStr.Replace("<db>", @"D:\tmp\github\utilities\KinhPhat\kinhtang.accdb");
+            edt.m_cnnStr = m_cnnStr;
+            edt.m_titles = m_titles;
+            edt.initCnn();
+            edt.loadTitle();
+            edt.updateCmb();
+            edt.Show();
         }
         private void Open_Click(object sender, EventArgs e)
         {
@@ -267,6 +243,7 @@ namespace WindowsFormsApp1
                 m_tree.Nodes.Clear();
 
                 var titles = getTitles();
+                m_titles = titles;
                 addTitles(titles);
                 renderTree(m_nodeDict.Values.ElementAt(0));
             }
@@ -331,6 +308,17 @@ namespace WindowsFormsApp1
         }
         void exportTitles(string path, List<MyTitle> selected)
         {
+            var cnn = new OleDbConnection(m_cnnStr);
+            cnn.Open();
+            foreach (var title in selected)
+            {
+                if (title.paragraphLst == null)
+                {
+                    title.paragraphLst = getTitleParagraphs(cnn, title.ID);
+                }
+            }
+            cnn.Close();
+
             string jsTxt = titlesLstToJson(selected);
             string htmlTxt = genHtmlTxt(jsTxt);
             File.WriteAllText(path, htmlTxt);
@@ -351,6 +339,12 @@ namespace WindowsFormsApp1
             //    if (par.alignment == 1) {m_rtb.SelectionAlignment = HorizontalAlignment.Center;}
             //    m_rtb.SelectedText = par.content + "\n";
             //}
+
+            OleDbConnection conn = new OleDbConnection(m_cnnStr);
+            conn.Open();
+            title.paragraphLst = getTitleParagraphs(conn, title.ID);
+            conn.Close();
+
             string jsTxt = titlesLstToJson(title);
             string htmlTxt = genHtmlTxt(jsTxt);
             UpdateWB(htmlTxt);
@@ -404,9 +398,9 @@ namespace WindowsFormsApp1
         #region tree
         void addTitles(List<MyTitle> titles)
         {
-            foreach(var title in titles)
+            foreach (var title in titles)
             {
-                var tNode = addRow('T', (UInt64)title.paragraphLst.Count, 
+                var tNode = addRow('T', title.paragraphLst == null?0:(UInt64)title.paragraphLst.Count,
                     title.zPath, title.zTitle);
                 tNode.title = title;
             }
@@ -420,7 +414,7 @@ namespace WindowsFormsApp1
             string zNo = txt.Substring(4);
             switch (zNo)
             {
-                case "I":return 1;
+                case "I": return 1;
                 case "II": return 2;
                 case "III": return 3;
                 case "IV": return 4;
@@ -473,7 +467,8 @@ namespace WindowsFormsApp1
         TreeNode CreateTreeNode(Node node)
         {
             //if (node.type != 'T') { node.size = (UInt64)node.childs.Count; }
-            string name = string.Format("{0} ({1})", node.name, node.size);
+            string name = node.size ==0 ? node.name :
+                string.Format("{0} ({1})", node.name, node.size);
             TreeNode newNode = new TreeNode(name)
             {
                 Tag = node.id,
@@ -765,5 +760,41 @@ namespace WindowsFormsApp1
             }
         }
         #endregion
+    }
+
+    [DataContract(Name = "MyTitle")]
+    public class MyTitle
+    {
+        [DataMember(Name = "ID", EmitDefaultValue = false)]
+        public UInt64 ID;
+        [DataMember(Name = "title", EmitDefaultValue = false)]
+        public string zTitle;
+        public UInt64 pathId;
+        [DataMember(Name = "path", EmitDefaultValue = false)]
+        public string zPath;
+        [DataMember(Name = "paragraphs", EmitDefaultValue = false)]
+        public List<MyParagraph> paragraphLst;
+        public int ord;
+    }
+    [DataContract(Name = "MyParagraph")]
+    public class MyParagraph
+    {
+        public UInt64 ID;
+        public String zTitle;
+        public UInt64 titleId;
+        [DataMember(Name = "order", EmitDefaultValue = false)]
+        public int order;
+        [DataMember(Name = "alignment", EmitDefaultValue = false)]
+        public int alignment;
+        [DataMember(Name = "leftIndent", EmitDefaultValue = false)]
+        public int leftIndent;
+        [DataMember(Name = "fontSize", EmitDefaultValue = false)]
+        public int fontSize;
+        [DataMember(Name = "fontBold", EmitDefaultValue = false)]
+        public int fontBold;
+        [DataMember(Name = "fontItalic", EmitDefaultValue = false)]
+        public int fontItalic;
+        [DataMember(Name = "content", EmitDefaultValue = false)]
+        public string content;
     }
 }
