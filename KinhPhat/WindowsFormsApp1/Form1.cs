@@ -81,7 +81,65 @@ namespace WindowsFormsApp1
 #endif
             wb.Dock = DockStyle.Fill;
             m_wb = wb;
-            m_sc.Panel2.Controls.Add(m_wb);
+            //m_sc.Panel2.Controls.Add(m_wb);
+
+            var edtPanel = new EditPanel();
+            m_edtPanel = edtPanel;
+
+            edtPanel.m_sc.Panel1.Controls.Add(m_wb);
+            edtPanel.m_sc.Panel2Collapsed = true;
+            edtPanel.m_sc.Panel2.Hide();
+            m_sc.Panel2.Controls.Add(edtPanel.m_sc);
+
+            var bs = new BindingSource();
+            bs.DataSource = edtPanel.m_dataTable;
+            edtPanel.m_dataTable.RowChanged += Bs_DataSourceChanged;
+            bs.CurrentItemChanged += Bs_CurrentItemChanged;
+            bs.CurrentChanged += Bs_CurrentChanged;
+
+            this.Load += Form1_Load;
+        }
+
+        private void Bs_CurrentChanged(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Bs_CurrentItemChanged(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            var cfg = ConfigMng.getInstance();
+            var cnnStr = cfg.m_cnnInfo.cnnStr;
+            if (cnnStr == null )
+            {
+                Open_Click(this, new EventArgs());
+                cfg.m_cnnInfo.cnnStr = m_cnnStr;
+                cfg.UpdateConfig();
+            }
+            else
+            {
+                m_cnnStr = cfg.m_cnnInfo.cnnStr;
+                renderTree();
+            }
+            m_edtPanel.m_cnnStr = m_cnnStr;
+            m_edtPanel.initCnn();
+        }
+
+        EditPanel m_edtPanel;
+        bool m_loadTitleCompleted;
+        private void Bs_DataSourceChanged(object sender, EventArgs e)
+        {
+            if (!m_loadTitleCompleted) return;
+
+            var title = m_edtPanel.m_title;
+            title.paragraphLst = getTitleParagraphs(m_edtPanel.m_dataTable);
+            string jsTxt = titlesLstToJson(title);
+            string htmlTxt = genHtmlTxt(jsTxt);
+            UpdateWB(htmlTxt);
         }
 
         #region db
@@ -168,6 +226,26 @@ namespace WindowsFormsApp1
             reader.Close();
             return paragraphLst;
         }
+        static List<MyParagraph> getTitleParagraphs(DataTable dt)
+        {
+            var paragraphLst = new List<MyParagraph>();
+            foreach (DataRow row in dt.Rows)
+            {
+                var par = new MyParagraph
+                {
+                    titleId = Convert.ToUInt64(row["titleId"]),
+                    order = Convert.ToInt32(row["ord"]),
+                    alignment = Convert.ToInt32(row["alignment"]),
+                    leftIndent = Convert.ToInt32(row["leftIndent"]),
+                    fontSize = Convert.ToInt32(row["fontSize"]),
+                    fontBold = Convert.ToInt32(row["fontBold"]),
+                    fontItalic = Convert.ToInt32(row["fontItalic"]),
+                    content = Convert.ToString(row["content"])
+                };
+                paragraphLst.Add(par);
+            }
+            return paragraphLst;
+        }
 
 
         static XmlObjectSerializer createSerializer(Type type)
@@ -213,17 +291,12 @@ namespace WindowsFormsApp1
             if (title == null) return;
 
             //edit
-            TitleEdt edt = new TitleEdt();
-            edt.m_title = new MyTitle() { ID = title.ID };
-
-            //var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
-            //cnnStr = cnnStr.Replace("<db>", @"D:\tmp\github\utilities\KinhPhat\kinhtang.accdb");
-            edt.m_cnnStr = m_cnnStr;
-            edt.m_titles = m_titles;
-            edt.initCnn();
-            edt.loadTitle();
-            edt.updateCmb();
-            edt.Show();
+            m_edtPanel.m_title = new MyTitle() { ID = title.ID, zPath=title.zPath, zTitle = title.zTitle };
+            m_loadTitleCompleted = false;
+            m_edtPanel.loadTitle();
+            m_loadTitleCompleted = true;
+            m_edtPanel.m_sc.Panel2Collapsed = false;
+            m_edtPanel.m_sc.Panel2.Show();
         }
         private void Open_Click(object sender, EventArgs e)
         {
@@ -238,16 +311,21 @@ namespace WindowsFormsApp1
                 var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
                 m_cnnStr = cnnStr.Replace("<db>", m_db);
 
-                //clear tree
-                m_nodeDict.Clear();
-                m_tree.Nodes.Clear();
-
-                var titles = getTitles();
-                m_titles = titles;
-                addTitles(titles);
-                renderTree(m_nodeDict.Values.ElementAt(0));
+                renderTree();
             }
 #endif
+        }
+
+        void renderTree()
+        {
+            //clear tree
+            m_nodeDict.Clear();
+            m_tree.Nodes.Clear();
+
+            var titles = getTitles();
+            m_titles = titles;
+            addTitles(titles);
+            renderTree(m_nodeDict.Values.ElementAt(0));
         }
 
         private void Preview_Click(object sender, EventArgs e)
