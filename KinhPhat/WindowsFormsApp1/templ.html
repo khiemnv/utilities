@@ -789,6 +789,7 @@
                     var txt = g_playingTitle.paragraphs[g_playingPar].content.replace(/\u000b/g, '\r');
                     playSpeek(txt);
                     btn.textContent = "⏸️";
+                    parScroll(g_playingPar);
                     break;
                 case 1: //play ->pause
                     spn.innerHTML = getPlayStsMsg(2);
@@ -865,6 +866,11 @@
                 onend: onSpeekEnd
             }
             responsiveVoice.speak(txt, "Vietnamese Female", parameters);
+        }
+        function parScroll(parIndex) {
+            var d = document.getElementById("id_content");
+            var p = d.childNodes[parIndex];
+            d.scrollTop = p.offsetTop;
         }
     </script>
     <script>

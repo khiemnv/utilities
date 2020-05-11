@@ -25,6 +25,7 @@ namespace WindowsFormsApp1
         Dictionary<string, Node> m_nodeDict;
         BackgroundWorker m_bw;
         SplitContainer m_sc;
+        SplitContainer m_rsc;
         RichTextBox m_rtb;
         List<MyTitle> m_titles;
 #if use_gecko
@@ -81,23 +82,37 @@ namespace WindowsFormsApp1
 #endif
             wb.Dock = DockStyle.Fill;
             m_wb = wb;
-            //m_sc.Panel2.Controls.Add(m_wb);
+            m_rsc = new SplitContainer()
+            {
+                Dock = DockStyle.Fill,
+            };
+            m_rsc.Panel1.Controls.Add(m_wb);
 
             var edtPanel = new EditPanel();
             m_edtPanel = edtPanel;
 
-            edtPanel.m_sc.Panel1.Controls.Add(m_wb);
-            edtPanel.m_sc.Panel2Collapsed = true;
-            edtPanel.m_sc.Panel2.Hide();
-            m_sc.Panel2.Controls.Add(edtPanel.m_sc);
+            m_rsc.Panel2Collapsed = true;
+            m_rsc.Panel2.Hide();
+            m_rsc.Panel2.Controls.Add(edtPanel.m_tlp);
 
-            var bs = new BindingSource();
-            bs.DataSource = edtPanel.m_dataTable;
+            m_sc.Panel2.Controls.Add(m_rsc);
+
+            var bs = new BindingSource
+            {
+                DataSource = edtPanel.m_dataTable
+            };
             edtPanel.m_dataTable.RowChanged += Bs_DataSourceChanged;
+            edtPanel.OnHideEditor += EdtPanel_OnHideEditor;
             bs.CurrentItemChanged += Bs_CurrentItemChanged;
             bs.CurrentChanged += Bs_CurrentChanged;
 
             this.Load += Form1_Load;
+        }
+
+        private void EdtPanel_OnHideEditor(object sender, EventArgs e)
+        {
+            m_rsc.Panel2Collapsed = true;
+            m_rsc.Panel2.Hide();
         }
 
         private void Bs_CurrentChanged(object sender, EventArgs e)
@@ -295,8 +310,8 @@ namespace WindowsFormsApp1
             m_loadTitleCompleted = false;
             m_edtPanel.loadTitle();
             m_loadTitleCompleted = true;
-            m_edtPanel.m_sc.Panel2Collapsed = false;
-            m_edtPanel.m_sc.Panel2.Show();
+            m_rsc.Panel2Collapsed = false;
+            m_rsc.Panel2.Show();
         }
         private void Open_Click(object sender, EventArgs e)
         {

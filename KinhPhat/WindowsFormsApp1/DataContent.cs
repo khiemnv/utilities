@@ -201,9 +201,9 @@ namespace WindowsFormsApp1
                    new lColInfo( "ord"       ,"Thứ tự"   , lColInfo.lColType.num),
                    new lColInfo( "alignment" ,"alignment"    , getAlignmentMapSrc()),
                    new lColInfo( "leftIndent","left indent"  , lColInfo.lColType.num),
-                   new lColInfo( "fontSize"  ,"font size"    , lColInfo.lColType.num),
-                   new lColInfo( "fontBold"  ,"font bold"    , lColInfo.lColType.boolean),
-                   new lColInfo( "fontItalic","font italic"  , lColInfo.lColType.boolean),
+                   new lColInfo( "fontSize"  ,"size"    , lColInfo.lColType.num),
+                   new lColInfo( "fontBold"  ,"bold"    , lColInfo.lColType.boolean),
+                   new lColInfo( "fontItalic","italic"  , lColInfo.lColType.boolean),
                    new lColInfo( "content"   ,"Nội dung"     , lColInfo.lColType.text),
                    new lColInfo( "note"      ,"Ghi Chú"      , lColInfo.lColType.text),
                 };

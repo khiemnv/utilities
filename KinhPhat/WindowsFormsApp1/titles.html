@@ -768,6 +768,11 @@
             }
             PlayContent();
         }
+        function onNextTitle() {
+            StopSpeek();
+            g_playingPar = g_playingTitle.paragraphs.length - 1;
+            PlayContent();
+        }
         function onPrevTitle() {
             StopSpeek();
             g_playingPar = 0;
@@ -784,6 +789,7 @@
                     var txt = g_playingTitle.paragraphs[g_playingPar].content.replace(/\u000b/g, '\r');
                     playSpeek(txt);
                     btn.textContent = "⏸️";
+                    parScroll(g_playingPar);
                     break;
                 case 1: //play ->pause
                     spn.innerHTML = getPlayStsMsg(2);
@@ -860,6 +866,11 @@
                 onend: onSpeekEnd
             }
             responsiveVoice.speak(txt, "Vietnamese Female", parameters);
+        }
+        function parScroll(parIndex) {
+            var d = document.getElementById("id_content");
+            var p = d.childNodes[parIndex];
+            d.scrollTop = p.offsetTop;
         }
     </script>
     <script>
@@ -1042,7 +1053,7 @@
             cont.style.height = h;
             //bot ctrls
             var botctrls = document.getElementById("id_botCtrls");
-            botctrls.style.right = r;
+            botctrls.style.right = r+10;
             botctrls.style.bottom = b;
             //goto top btn
             var gtbtn = document.getElementById("id_gotoTopBtn")
