@@ -23,18 +23,18 @@ namespace test_editTitle
 
         private void button1_Click(object sender, EventArgs e)
         {
-            TitleEdt edt = new TitleEdt();
-            edt.m_title = new MyTitle()
+            TitleEdt edt = new TitleEdt(true);
+            edt.m_edtPanel.m_title = new MyTitle()
             {
                 ID = 5,
             };
 
             var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
             cnnStr = cnnStr.Replace("<db>", @"D:\tmp\github\utilities\KinhPhat\kinhtang.accdb");
-            edt.m_cnnStr = cnnStr;
-            edt.initCnn();
-            edt.loadTitle();
-            edt.updateCmb();
+            edt.m_edtPanel.m_cnnStr = cnnStr;
+            edt.m_edtPanel.initCnn();
+            edt.m_edtPanel.loadTitle();
+            edt.m_edtPanel.updateCmb();
             edt.ShowDialog();
         }
     }
