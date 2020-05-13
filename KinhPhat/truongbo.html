@@ -7,25 +7,25 @@
             display: table-cell;
             padding: 0;
             margin: 0;
-            margin-top: -4px;
-            margin-left: 0px;
-            margin-right: 0px;
+            margin-top: 2px;
+            margin-left: 2px;
+            margin-right: 2px;
             background-color: transparent;
             border: none;
-            font-size:larger;
             font-family: 'Arial Unicode MS';
+            transform:scale(1.5,1.5);
         }
         button.miImgBtn {
             display: table-cell;
             padding: 0;
             margin: 0;
-            margin-top: -4px;
-            margin-left: 0px;
-            margin-right: 0px;
+            margin-top: 0px;
+            margin-left: 2px;
+            margin-right: 2px;
             background-color: transparent;
             border: none;
-            font-size:larger;
-            font-family: 'Arial Unicode MS'
+            font-family: 'Arial Unicode MS';
+            transform:scale(1.5,1.5);
         }
 
         span.miLabel:hover {
@@ -122,18 +122,15 @@
         </table>
     </div>
     <div id="id_botCtrls" style="position:fixed;bottom:10px;right:10px">
-        <table style="width: 100%; border-width: 0px; border-collapse: collapse">
-            <tr>
-                <td style="width:100%"></td>
-                <td><button class="playBtn" id="id_playContent" onclick="onPlayContent()">⏯️</button></td>
-                <td><button class="playBtn" id="id_stopSpeek" onclick="onStopSpeek()">⏹️</button></td>
-                <td><button class="playBtn" id="id_prevTitle" onclick="onPrevTitle()">⏮</button></td>
-                <td><button class="playBtn" id="id_backward" onclick="onBackward()">⏪</button></td>
-                <td><button class="playBtn" id="id_fastForward" onclick="onFastForward()">⏩</button></td>
-                <td><button class="playBtn" id="id_nextTitle" onclick="onNextTitle()">⏭</button></td>
-                <td><span id="id_playContentSts" style="font-family:'MS Gothic'">stoped&nbsp;</span></td>
-            </tr>
-        </table>
+        <span style="white-space:nowrap">
+            <button class="playBtn" id="id_playContent" onclick="onPlayContent()">⏯️</button>
+            <button class="playBtn" id="id_stopSpeek" onclick="onStopSpeek()">⏹️</button>
+            <button class="playBtn" id="id_prevTitle" onclick="onPrevTitle()">⏮</button>
+            <button class="playBtn" id="id_backward" onclick="onBackward()">⏪</button>
+            <button class="playBtn" id="id_fastForward" onclick="onFastForward()">⏩</button>
+            <button class="playBtn" id="id_nextTitle" onclick="onNextTitle()">⏭</button>
+            <span id="id_playContentSts" style="font-family:'MS Gothic'">stoped&nbsp;</span>
+        </span>
     </div>
     <div id="id_menu" class="menu">
         <div id="root_childs" class="miChilds">
@@ -267,8 +264,8 @@
         var g_titlesDict = {};
         var baseUrl = window.location.href.replace(/\/[^/]*\.html/, "");
         var g_impSrc = {
-            "expand": "▷",
-            "colapse": "▽",
+            "expand": "▷", //"▷＋",
+            "colapse": "▽", //"▽－",
             "noop": "　",
             "checked": "■",
             "uncheck": "□",
@@ -804,7 +801,7 @@
                     var txt = g_playingTitle.paragraphs[g_playingPar].content.replace(/\u000b/g, '\r');
                     playSpeek(txt);
                     btn.textContent = "⏸️";
-                    parScroll(g_playingPar);
+                    parScroll(g_playingPar);    //auto scroll
                     break;
                 case 1: //play ->pause
                     spn.innerHTML = getPlayStsMsg(2);
@@ -886,6 +883,20 @@
             var d = document.getElementById("id_content");
             var p = d.childNodes[parIndex];
             d.scrollTop = p.offsetTop;
+        }
+        //on content scroll ->display par
+        function displayReadingPar() {
+            if (g_speekState != 0) return;
+            var d = document.getElementById("id_content");
+            for (var i in d.childNodes) {
+                var p = d.childNodes[i];
+                if (d.scrollTop <= p.offsetTop) {
+                    var spn = document.getElementById("id_playContentSts");
+                    g_playingPar = parseInt(i);
+                    spn.innerHTML = getPlayStsMsg(0);
+                    break;
+                }
+            }
         }
     </script>
     <script>
@@ -1010,6 +1021,9 @@
             else {
                 document.getElementById("id_gotoTopBtn").style.display = "none";
             }
+
+            //display par no
+            displayReadingPar();
         }
         function gotoTop() {
             document.getElementById("id_content").scrollTop = 0;
@@ -1245,6 +1259,47 @@
         }
     </script>
     <script>
+        //adj css style for modile
+        function getStyleRule(unique_title) {
+            for (var i = 0; i < document.styleSheets.length; i++) {
+                var sheet = document.styleSheets[i];
+                for (var j in sheet.cssRules) {
+                    var rule = sheet.cssRules[j];
+                    if (rule.selectorText == unique_title) {
+                        return rule;
+                    }
+                }                
+            }
+        }
+        function adjCssStyle(isAndroid) {
+            if (isAndroid) {
+                var rule = getStyleRule("button.miStsBtn");
+                rule.style['margin-top']='-5px';
+                rule.style['font-family'] = 'Cambria Math';
+                rule.style['transform'] = 'scale(1.5, 1.5)';
+
+                var r2 = getStyleRule("button.miImgBtn");
+                r2.style['margin-top'] = '6px';
+                r2.style['font-family'] = 'Cambria, Cochin, Georgia, Times, Times New Roman, serif';
+                r2.style['transform'] = 'scale(1, 1)';
+
+                var r3 = getStyleRule("button.playBtn");
+                r3.style['transform']= 'scale(1.4, 1.4)';
+                r3.style['margin-right'] = '10px';
+                r3.style['margin-left'] = '10px';
+
+                g_impSrc = {
+                    "expand": "＋", //"▷＋",
+                    "colapse": "－", //"▽－",
+                    "noop": "　",
+                    "checked": "◼",
+                    "uncheck": "◻",
+                    "gray": "▣",
+                };
+            }
+        }
+    </script>
+    <script>
         //mainx1() - part x1
         document.getElementById("id_gotoTopBtn").style.display = "none";
         window.onscroll = onScroll;
@@ -1255,6 +1310,9 @@
         //document.getElementById("log").innerText = "ration:" + ratio;
         //adjMenuSize(g_ratio);
         window.onresize = ctrlsResize;
+
+        var g_isAndroid = g_ratio > 1.5;
+        adjCssStyle(g_isAndroid);
 
         render1(g_lectLst); //render tree
         adjFont(g_ratio);
