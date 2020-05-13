@@ -37,6 +37,7 @@ namespace WindowsFormsApp1
 #endif
         string m_db;
         string m_cnnStr;
+        lContentProvider m_content { get { return ConfigMng.getInstance().m_content; } }
         public Form1()
         {
             InitializeComponent();
@@ -44,11 +45,11 @@ namespace WindowsFormsApp1
             this.Menu = new MainMenu();
             var file = Menu.MenuItems.Add("&File");
             var open = file.MenuItems.Add("&Open");
-            open.Click += Open_Click;
+            open.Click += OnOpenDb;
             var preview = file.MenuItems.Add("&Preview");
-            preview.Click += Preview_Click;
+            preview.Click += PreviewTitle;
             var export = file.MenuItems.Add("&Export");
-            export.Click += Export_Click;
+            export.Click += ExportSelected;
 
             m_sc = new SplitContainer();
             m_sc.Dock = DockStyle.Fill;
@@ -64,8 +65,8 @@ namespace WindowsFormsApp1
             initTree(); //set state imagine
 
             m_tree.Dock = DockStyle.Fill;
-            m_tree.NodeMouseClick += Tree_NodeMouseClick;
-            m_tree.NodeMouseDoubleClick += Tree_NodeMouseDoubleClick;
+            m_tree.NodeMouseClick += OnTreeNodeClick;
+            m_tree.NodeMouseDoubleClick += OnTreeNodeDblClick;
             m_tree.Visible = true;
             m_tree.Nodes.Add(new TreeNode() { Text = "None", SelectedImageIndex = 0 });
 
@@ -101,15 +102,15 @@ namespace WindowsFormsApp1
             {
                 DataSource = edtPanel.m_dataTable
             };
-            edtPanel.m_dataTable.RowChanged += Bs_DataSourceChanged;
-            edtPanel.OnHideEditor += EdtPanel_OnHideEditor;
+            edtPanel.m_dataTable.RowChanged += OnEditPar;
+            edtPanel.OnHideEditor += OnCloseEditor;
             bs.CurrentItemChanged += Bs_CurrentItemChanged;
             bs.CurrentChanged += Bs_CurrentChanged;
 
-            this.Load += Form1_Load;
+            this.Load += OnLoadForm;
         }
 
-        private void EdtPanel_OnHideEditor(object sender, EventArgs e)
+        private void OnCloseEditor(object sender, EventArgs e)
         {
             m_rsc.Panel2Collapsed = true;
             m_rsc.Panel2.Hide();
@@ -125,143 +126,39 @@ namespace WindowsFormsApp1
             throw new NotImplementedException();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void OnLoadForm(object sender, EventArgs e)
         {
             var cfg = ConfigMng.getInstance();
             var cnnStr = cfg.m_cnnInfo.cnnStr;
-            if (cnnStr == null )
+            if (cnnStr == null && OpenDbDlg())
             {
-                Open_Click(this, new EventArgs());
                 cfg.m_cnnInfo.cnnStr = m_cnnStr;
                 cfg.UpdateConfig();
+                cfg.m_content.initCnn(m_cnnStr);
+                renderTree();
             }
             else
             {
                 m_cnnStr = cfg.m_cnnInfo.cnnStr;
+                cfg.m_content.initCnn(m_cnnStr);
                 renderTree();
             }
-            m_edtPanel.m_cnnStr = m_cnnStr;
-            m_edtPanel.initCnn();
         }
 
         EditPanel m_edtPanel;
         bool m_loadTitleCompleted;
-        private void Bs_DataSourceChanged(object sender, EventArgs e)
+        private void OnEditPar(object sender, EventArgs e)
         {
             if (!m_loadTitleCompleted) return;
 
             var title = m_edtPanel.m_title;
-            title.paragraphLst = getTitleParagraphs(m_edtPanel.m_dataTable);
+            title.paragraphLst = m_content.getTitleParagraphs(m_edtPanel.m_dataTable);
             string jsTxt = titlesLstToJson(title);
             string htmlTxt = genHtmlTxt(jsTxt);
             UpdateWB(htmlTxt);
         }
 
         #region db
-        class pathItem
-        {
-            public UInt64 id;
-            public string path;
-        }
-        static List<MyTitle> getTitles(OleDbConnection cnn)
-        {
-            //get paths
-            var pathLst = new List<pathItem>();
-            var qry = "select * from paths order by ord ASC";
-            var cmd = new OleDbCommand(qry, cnn);
-            var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                pathLst.Add(new pathItem()
-                {
-                    id = Convert.ToUInt64(reader["ID"]),
-                    path = Convert.ToString(reader["path"])
-                });
-            }
-            reader.Close();
-
-            //get title
-            var titleLst = new List<MyTitle>();
-            var qry2 = "select * from titles WHERE pathId = @pathId order by ord ASC";
-            var cmd2 = new OleDbCommand(qry2, cnn);
-            cmd2.Parameters.Add("@pathId", OleDbType.BigInt);
-            foreach (var pi in pathLst)
-            {
-                cmd2.Parameters[0].Value = pi.id;
-                var reader2 = cmd2.ExecuteReader();
-                int ord = 0;
-                while (reader2.Read())
-                {
-                    var title = new MyTitle();
-                    title.ID = Convert.ToUInt64(reader2["ID"]);
-                    title.zTitle = Convert.ToString(reader2["title"]);
-                    title.pathId = Convert.ToUInt64(reader2["pathId"]);
-                    title.zPath = pi.path + "/" + title.zTitle;
-                    title.ord = Convert.ToInt32(reader2["ord"]);
-                    titleLst.Add(title);
-                    Debug.Assert(title.ord > ord);
-                    ord = title.ord;
-                }
-                reader2.Close();
-            }
-
-            return titleLst;
-        }
-
-        static List<MyParagraph> getTitleParagraphs(OleDbConnection cnn, UInt64 titleId)
-        {
-            var paragraphLst = new List<MyParagraph>();
-            //get title
-            var qry = "select * from paragraphs where titleId = @id ";
-            var cmd = new OleDbCommand(qry, cnn);
-            cmd.Parameters.AddWithValue("@id", titleId);
-            var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                var par = new MyParagraph();
-                par.titleId = Convert.ToUInt64(reader["titleId"]);
-                par.order = Convert.ToInt32(reader["ord"]);
-                par.alignment = Convert.ToInt32(reader["alignment"]);
-                par.leftIndent = Convert.ToInt32(reader["leftIndent"]);
-                par.fontSize = Convert.ToInt32(reader["fontSize"]);
-                par.fontBold = Convert.ToInt32(reader["fontBold"]);
-                par.fontItalic = Convert.ToInt32(reader["fontItalic"]);
-                par.content = Convert.ToString(reader["content"]);
-                paragraphLst.Add(par);
-            }
-            paragraphLst.Sort((x, y) => { return (x.order - y.order); });
-
-            int order = 0;
-            foreach (var par in paragraphLst)
-            {
-                Debug.Assert(par.order > order);
-                order = par.order;
-            }
-
-            reader.Close();
-            return paragraphLst;
-        }
-        static List<MyParagraph> getTitleParagraphs(DataTable dt)
-        {
-            var paragraphLst = new List<MyParagraph>();
-            foreach (DataRow row in dt.Rows)
-            {
-                var par = new MyParagraph
-                {
-                    titleId = Convert.ToUInt64(row["titleId"]),
-                    order = Convert.ToInt32(row["ord"]),
-                    alignment = Convert.ToInt32(row["alignment"]),
-                    leftIndent = Convert.ToInt32(row["leftIndent"]),
-                    fontSize = Convert.ToInt32(row["fontSize"]),
-                    fontBold = Convert.ToInt32(row["fontBold"]),
-                    fontItalic = Convert.ToInt32(row["fontItalic"]),
-                    content = Convert.ToString(row["content"])
-                };
-                paragraphLst.Add(par);
-            }
-            return paragraphLst;
-        }
-
 
         static XmlObjectSerializer createSerializer(Type type)
         {
@@ -280,42 +177,61 @@ namespace WindowsFormsApp1
         }
         List<MyTitle> getTitles()
         {
-            OleDbConnection conn = new OleDbConnection(m_cnnStr);
-            conn.Open();
-
-            List<MyTitle> titleLst = getTitles(conn);
+            List<MyTitle> titleLst = m_content.getTitles2();
             foreach (var title in titleLst)
             {
                 //title.paragraphLst = getTitleParagraphs(conn, title.ID);
                 //break;
             }
 
-            conn.Close();
             return titleLst;
         }
         #endregion
         #region event_process
-        private void Tree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void OnTreeNodeClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             //throw new NotImplementedException();
             OnNodeMouseClick(sender, e);
         }
-        private void Tree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void OnTreeNodeDblClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             var title = m_nodeDict[(string)e.Node.Tag].title;
             if (title == null) return;
 
             //edit
-            m_edtPanel.m_title = new MyTitle() { ID = title.ID, zPath=title.zPath, zTitle = title.zTitle };
+            m_edtPanel.m_title = new MyTitle() {
+                ID = title.ID,
+                zPath = title.zPath,
+                zTitle = title.zTitle
+            };
             m_loadTitleCompleted = false;
             m_edtPanel.loadTitle();
             m_loadTitleCompleted = true;
             m_rsc.Panel2Collapsed = false;
             m_rsc.Panel2.Show();
         }
-        private void Open_Click(object sender, EventArgs e)
+        private void OnOpenDb(object sender, EventArgs e)
         {
-#if true
+            if (OpenDbDlg())
+            {
+                //Close editor
+                m_edtPanel.clear();
+                m_rsc.Panel2Collapsed = true;
+                m_rsc.Panel2.Hide();
+
+                //update config
+                var cnf = ConfigMng.getInstance();
+                cnf.m_content.closeCnn();
+                cnf.m_cnnInfo.cnnStr = m_cnnStr;
+                cnf.UpdateConfig();
+                cnf.m_content.initCnn(m_cnnStr);
+
+                renderTree();
+            }
+        }
+
+        bool OpenDbDlg()
+        {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "access files (*.accdb)|*.accdb";
             //ofd.Multiselect = true;
@@ -325,10 +241,9 @@ namespace WindowsFormsApp1
                 m_db = ofd.FileName;
                 var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
                 m_cnnStr = cnnStr.Replace("<db>", m_db);
-
-                renderTree();
+                return true;
             }
-#endif
+            return false;
         }
 
         void renderTree()
@@ -343,7 +258,7 @@ namespace WindowsFormsApp1
             renderTree(m_nodeDict.Values.ElementAt(0));
         }
 
-        private void Preview_Click(object sender, EventArgs e)
+        private void PreviewTitle(object sender, EventArgs e)
         {
             var selected = getSelectedTitles();
             if (selected.Count > 0)
@@ -353,7 +268,7 @@ namespace WindowsFormsApp1
                 UpdateWB(htmlTxt);
             }
         }
-        private void Export_Click(object sender, EventArgs e)
+        private void ExportSelected(object sender, EventArgs e)
         {
             //get selected item
             var selected = getSelectedTitles();
@@ -397,21 +312,17 @@ namespace WindowsFormsApp1
                     }
                 }
             }
-            return selected;
-        }
-        void exportTitles(string path, List<MyTitle> selected)
-        {
-            var cnn = new OleDbConnection(m_cnnStr);
-            cnn.Open();
             foreach (var title in selected)
             {
                 if (title.paragraphLst == null)
                 {
-                    title.paragraphLst = getTitleParagraphs(cnn, title.ID);
+                    title.paragraphLst = m_content.getTitleParagraphs(title.ID);
                 }
             }
-            cnn.Close();
-
+            return selected;
+        }
+        void exportTitles(string path, List<MyTitle> selected)
+        {
             string jsTxt = titlesLstToJson(selected);
             string htmlTxt = genHtmlTxt(jsTxt);
             File.WriteAllText(path, htmlTxt);
@@ -433,11 +344,7 @@ namespace WindowsFormsApp1
             //    m_rtb.SelectedText = par.content + "\n";
             //}
 
-            OleDbConnection conn = new OleDbConnection(m_cnnStr);
-            conn.Open();
-            title.paragraphLst = getTitleParagraphs(conn, title.ID);
-            conn.Close();
-
+            title.paragraphLst = m_content.getTitleParagraphs(title.ID);
             string jsTxt = titlesLstToJson(title);
             string htmlTxt = genHtmlTxt(jsTxt);
             UpdateWB(htmlTxt);

@@ -31,8 +31,9 @@ namespace test_editTitle
 
             var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
             cnnStr = cnnStr.Replace("<db>", @"D:\tmp\github\utilities\KinhPhat\kinhtang.accdb");
-            edt.m_edtPanel.m_cnnStr = cnnStr;
-            edt.m_edtPanel.initCnn();
+            ConfigMng.getInstance().m_content.initCnn(cnnStr);
+            //edt.m_edtPanel.m_cnnStr = cnnStr;
+            //edt.m_edtPanel.initCnn();
             edt.m_edtPanel.loadTitle();
             edt.m_edtPanel.updateCmb();
             edt.ShowDialog();

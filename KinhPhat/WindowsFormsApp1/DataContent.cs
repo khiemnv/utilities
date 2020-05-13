@@ -590,7 +590,7 @@ namespace WindowsFormsApp1
         protected lContentProvider()
         {
             //m_dataSyncs = new Dictionary<string, lDataSync>();
-            m_dataContents = new Dictionary<string, lDataContent>();
+            //m_dataContents = new Dictionary<string, lDataContent>();
         }
 
         protected Form1 m_form;
@@ -650,6 +650,17 @@ namespace WindowsFormsApp1
 
         public virtual object GetCnn() { throw new NotImplementedException(); }
 
+        public virtual void getTitleParagraphs(UInt64 titleId, DataTable dataTable)
+        {
+            throw new NotImplementedException();
+        }
+        public virtual DataTable getTitles() { throw new NotImplementedException(); }
+        public virtual void UpdateTitle(DataTable dt) { throw new NotImplementedException(); }
+        public virtual void initCnn(string m_cnnStr) { throw new NotImplementedException(); }
+        public virtual void closeCnn() { throw new NotImplementedException(); }
+        public virtual List<MyTitle> getTitles2() { throw new NotImplementedException(); }
+        public virtual List<MyParagraph> getTitleParagraphs(DataTable dt) { throw new NotImplementedException(); }
+        public virtual List<MyParagraph> getTitleParagraphs(UInt64 titleId) { throw new NotImplementedException(); }
         #region dispose
         // Dispose() calls Dispose(true)  
         public void Dispose()
@@ -680,8 +691,8 @@ namespace WindowsFormsApp1
                 }
             }
             // free native resources if there are any.
-            m_dataSyncs.Clear();
-            m_dataContents.Clear();
+            //m_dataSyncs.Clear();
+            //m_dataContents.Clear();
         }
         #endregion
     }
@@ -700,13 +711,171 @@ namespace WindowsFormsApp1
 
         lOleDbContentProvider() : base()
         {
-            string cnnStr = "";
-            m_cnn = new OleDbConnection(cnnStr);
-            m_cnn.Open();
+            //string cnnStr = "";
+            //m_cnn = new OleDbConnection(cnnStr);
+            //m_cnn.Open();
         }
 
         private OleDbConnection m_cnn;
+        OleDbDataAdapter m_dataAdapter;
+        public override void initCnn(string m_cnnStr)
+        {
+            //init cnn
+            m_cnn = new OleDbConnection(m_cnnStr);
+            m_cnn.Open();
+            m_dataAdapter = new OleDbDataAdapter
+            {
+                SelectCommand = new OleDbCommand(
+                string.Format("select * from paragraphs where titleId = ? order by ord"),
+                m_cnn)
+            };
+            m_dataAdapter.SelectCommand.Parameters.Add(
+                new OleDbParameter() { DbType = DbType.UInt64 });
+        }
+        public override void closeCnn()
+        {
+            if(m_cnn != null){
+                m_dataAdapter.Dispose();
+                m_cnn.Close();
+                m_cnn.Dispose();
+                m_cnn = null;
+            }
+        }
+        public override void getTitleParagraphs(UInt64 titleId, DataTable dataTable)
+        {
+            m_dataAdapter.SelectCommand.Parameters[0].Value = titleId;
+            dataTable.Clear();
+            dataTable.Locale = System.Globalization.CultureInfo.InvariantCulture;
+            m_dataAdapter.Fill(dataTable);
+        }
+        public override DataTable getTitles()
+        {
+            var dataAdapter = new OleDbDataAdapter
+            {
+                SelectCommand = new OleDbCommand(
+                "SELECT titles.ID as ID, path & '/' & title as zPath"
+                + " FROM titles INNER JOIN paths ON titles.pathId = paths.ID"
+                + " order by paths.ord, titles.ord; ", m_cnn)
+            };
+            var dt = new DataTable();
+            dataAdapter.Fill(dt);
+            dataAdapter.Dispose();
+            return dt;
+        }
+        public override void UpdateTitle(DataTable dt)
+        {
+            using (OleDbCommandBuilder builder = new OleDbCommandBuilder(m_dataAdapter))
+            {
+                if (dt != null)
+                {
+                    m_dataAdapter.UpdateCommand = builder.GetUpdateCommand();
+                    m_dataAdapter.Update(dt);
+                }
+            }
+        }
+        class pathItem
+        {
+            public UInt64 id;
+            public string path;
+        }
+        public override List<MyTitle> getTitles2()
+        {
+            OleDbConnection cnn = m_cnn;
+            //get paths
+            var pathLst = new List<pathItem>();
+            var qry = "select * from paths order by ord ASC";
+            var cmd = new OleDbCommand(qry, cnn);
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                pathLst.Add(new pathItem()
+                {
+                    id = Convert.ToUInt64(reader["ID"]),
+                    path = Convert.ToString(reader["path"])
+                });
+            }
+            reader.Close();
 
+            //get title
+            var titleLst = new List<MyTitle>();
+            var qry2 = "select * from titles WHERE pathId = @pathId order by ord ASC";
+            var cmd2 = new OleDbCommand(qry2, cnn);
+            cmd2.Parameters.Add("@pathId", OleDbType.BigInt);
+            foreach (var pi in pathLst)
+            {
+                cmd2.Parameters[0].Value = pi.id;
+                var reader2 = cmd2.ExecuteReader();
+                int ord = 0;
+                while (reader2.Read())
+                {
+                    var title = new MyTitle();
+                    title.ID = Convert.ToUInt64(reader2["ID"]);
+                    title.zTitle = Convert.ToString(reader2["title"]);
+                    title.pathId = Convert.ToUInt64(reader2["pathId"]);
+                    title.zPath = pi.path + "/" + title.zTitle;
+                    title.ord = Convert.ToInt32(reader2["ord"]);
+                    titleLst.Add(title);
+                    Debug.Assert(title.ord > ord);
+                    ord = title.ord;
+                }
+                reader2.Close();
+            }
+
+            return titleLst;
+        }
+        public override List<MyParagraph> getTitleParagraphs(UInt64 titleId)
+        {
+            var paragraphLst = new List<MyParagraph>();
+            //get title
+            var qry = "select * from paragraphs where titleId = @id ";
+            var cmd = new OleDbCommand(qry, m_cnn);
+            cmd.Parameters.AddWithValue("@id", titleId);
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var par = new MyParagraph();
+                par.titleId = Convert.ToUInt64(reader["titleId"]);
+                par.order = Convert.ToInt32(reader["ord"]);
+                par.alignment = Convert.ToInt32(reader["alignment"]);
+                par.leftIndent = Convert.ToInt32(reader["leftIndent"]);
+                par.fontSize = Convert.ToInt32(reader["fontSize"]);
+                par.fontBold = Convert.ToInt32(reader["fontBold"]);
+                par.fontItalic = Convert.ToInt32(reader["fontItalic"]);
+                par.content = Convert.ToString(reader["content"]);
+                paragraphLst.Add(par);
+            }
+            paragraphLst.Sort((x, y) => { return (x.order - y.order); });
+
+            int order = 0;
+            foreach (var par in paragraphLst)
+            {
+                Debug.Assert(par.order > order);
+                order = par.order;
+            }
+
+            reader.Close();
+            return paragraphLst;
+        }
+        public override List<MyParagraph> getTitleParagraphs(DataTable dt)
+        {
+            var paragraphLst = new List<MyParagraph>();
+            foreach (DataRow row in dt.Rows)
+            {
+                var par = new MyParagraph
+                {
+                    titleId = Convert.ToUInt64(row["titleId"]),
+                    order = Convert.ToInt32(row["ord"]),
+                    alignment = Convert.ToInt32(row["alignment"]),
+                    leftIndent = Convert.ToInt32(row["leftIndent"]),
+                    fontSize = Convert.ToInt32(row["fontSize"]),
+                    fontBold = Convert.ToInt32(row["fontBold"]),
+                    fontItalic = Convert.ToInt32(row["fontItalic"]),
+                    content = Convert.ToString(row["content"])
+                };
+                paragraphLst.Add(par);
+            }
+            return paragraphLst;
+        }
         protected override lDataContent newDataContent(string tblName)
         {
             lOleDbDataContent data = new lOleDbDataContent(tblName, m_cnn);
@@ -745,6 +914,7 @@ namespace WindowsFormsApp1
         }
         #endregion
     }
+
 
     public class lDataSync : IRefresher, IDisposable
     {

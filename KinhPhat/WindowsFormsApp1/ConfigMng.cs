@@ -20,6 +20,7 @@ namespace WindowsFormsApp1
     {
         [DataMember(Name = "cnnInfo")]
         public CnnInfo m_cnnInfo;
+        public lContentProvider m_content;
 
         static ConfigMng m_instance;
         static string m_cfgPath = @"..\..\..\config.xml";
@@ -61,7 +62,10 @@ namespace WindowsFormsApp1
                 {
                     m_instance = new ConfigMng();
                 }
+
+                m_instance.m_content = lOleDbContentProvider.getInstance(null);
             }
+            
             return m_instance;
         }
         public void UpdateConfig()
