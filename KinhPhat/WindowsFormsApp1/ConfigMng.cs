@@ -15,11 +15,51 @@ namespace WindowsFormsApp1
         public string cnnStr;
     }
 
+    public class CurrentState
+    {
+        public List<string> selectedTitles = new List<string>();
+        public List<string> expandedNodes = new List<string>();
+
+        public bool AddSelectedTitle(string path)
+        {
+            if (selectedTitles.IndexOf(path) != 1)
+            {
+                selectedTitles.Add(path);
+                return true;
+            }
+            return false;
+        }
+        public bool RmSelectedTitle(string path)
+        {
+            return selectedTitles.Remove(path);
+        }
+        public bool AddColapsedNode(string path)
+        {
+            if (expandedNodes.IndexOf(path) != 1)
+            {
+                expandedNodes.Add(path);
+                return true;
+            }
+            return false;
+        }
+        public bool RmColapsedNode(string path)
+        {
+            return expandedNodes.Remove(path);
+        }
+        public void Reset()
+        {
+            selectedTitles.Clear();
+            expandedNodes.Clear();
+        }
+    }
+
     [DataContract(Name = "config")]
     public class ConfigMng
     {
         [DataMember(Name = "cnnInfo")]
         public CnnInfo m_cnnInfo;
+        [DataMember(Name = "curSts")]
+        public CurrentState m_curSts;
         public lContentProvider m_content;
 
         static ConfigMng m_instance;
@@ -28,12 +68,14 @@ namespace WindowsFormsApp1
         ConfigMng()
         {
             m_cnnInfo = new CnnInfo();
+            m_curSts = new CurrentState();
         }
 
         static XmlObjectSerializer createSerializer()
         {
             Type[] knownTypes = new Type[] {
                 typeof(CnnInfo),
+                typeof(CurrentState),
                 };
 
             DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings();
@@ -57,6 +99,14 @@ namespace WindowsFormsApp1
                     var obj = sz.ReadObject(xrd, false);
                     xrd.Close();
                     m_instance = (ConfigMng)obj;
+                    if (m_instance.m_curSts == null)
+                    {
+                        m_instance.m_curSts = new CurrentState();
+                    }
+                    if (m_instance.m_cnnInfo == null)
+                    {
+                        m_instance.m_cnnInfo = new CnnInfo();
+                    }
                 }
                 else
                 {

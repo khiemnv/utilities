@@ -16,6 +16,7 @@ using System.Data.OleDb;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text.RegularExpressions;
+using System.Speech.Synthesis;
 
 namespace WindowsFormsApp1
 {
@@ -28,6 +29,10 @@ namespace WindowsFormsApp1
         SplitContainer m_rsc;
         RichTextBox m_rtb;
         List<MyTitle> m_titles;
+
+        string m_curTite = "";
+        bool isEditing = false;
+
 #if use_gecko
         protected Gecko.GeckoWebBrowser m_wb;
 #elif use_chromium
@@ -42,14 +47,10 @@ namespace WindowsFormsApp1
         {
             InitializeComponent();
 
-            this.Menu = new MainMenu();
-            var file = Menu.MenuItems.Add("&File");
-            var open = file.MenuItems.Add("&Open");
-            open.Click += OnOpenDb;
-            var preview = file.MenuItems.Add("&Preview");
-            preview.Click += PreviewTitle;
-            var export = file.MenuItems.Add("&Export");
-            export.Click += ExportSelected;
+            var menu = new MenuStrip();
+            menu.Items.Add("&File").Click += (s, e) => { OnOpenDb(s, e); };
+            menu.Items.Add("&Preview").Click += (s, e) => { PreviewTitle(s, e); };
+            menu.Items.Add("&Export").Click += (s, e) => {ExportSelected(s, e); };
 
             m_sc = new SplitContainer();
             m_sc.Dock = DockStyle.Fill;
@@ -108,12 +109,37 @@ namespace WindowsFormsApp1
             bs.CurrentChanged += Bs_CurrentChanged;
 
             this.Load += OnLoadForm;
+            this.FormClosed += OnCloseForm;
+        }
+
+        SpeechSynthesizer m_ss;
+        private void SpeechTitle(MyTitle title)
+        {
+            //throw new NotImplementedException();
+            if (m_ss == null)
+            {
+                var ss = new SpeechSynthesizer();
+                ss.SetOutputToDefaultAudioDevice();
+                var iv = ss.GetInstalledVoices();
+                var vn = iv.First(v => { return v.VoiceInfo.Culture.Name == "vi-VN"; });
+                ss.SelectVoice(vn.VoiceInfo.Name);
+                m_ss = ss;
+            }
+            foreach(MyParagraph p in title.paragraphLst)
+            {
+                m_ss.SpeakAsync(p.content);
+            }
+        }
+        private void SpeechStop()
+        {
+            m_ss.SpeakAsyncCancelAll();
         }
 
         private void OnCloseEditor(object sender, EventArgs e)
         {
             m_rsc.Panel2Collapsed = true;
             m_rsc.Panel2.Hide();
+            isEditing = false;
         }
 
         private void Bs_CurrentChanged(object sender, EventArgs e)
@@ -142,7 +168,61 @@ namespace WindowsFormsApp1
                 m_cnnStr = cfg.m_cnnInfo.cnnStr;
                 cfg.m_content.initCnn(m_cnnStr);
                 renderTree();
+                //restore state
+                restoreSts();
             }
+        }
+
+        TreeNode GetTreeNode(string path)
+        {
+            return m_nodeDict[path].tnode;
+        }
+        void restoreSts()
+        {
+            foreach (string path in ConfigMng.getInstance().m_curSts.selectedTitles) {
+                var node = GetTreeNode(path);
+                Check(node, true);
+            }
+            foreach (string path in ConfigMng.getInstance().m_curSts.expandedNodes)
+            {
+                var node = GetTreeNode(path);
+                node.Expand();
+            }
+        }
+
+        private void OnCloseForm(object sender, FormClosedEventArgs e)
+        {
+            Queue<TreeNodeCollection> q = new Queue<TreeNodeCollection>();
+            q.Enqueue(m_tree.Nodes);
+            List<string> selected = new List<string>();
+            List<string> expanded = new List<string>();
+            while (q.Count > 0)
+            {
+                var nodes = q.Dequeue();
+                foreach (TreeNode node in nodes)
+                {
+                    if (node.Nodes.Count > 0)
+                    {
+                        q.Enqueue(node.Nodes);
+                    }
+                    else
+                    {
+                        //leaf
+                        if (node.StateImageIndex == 1)
+                        {
+                            selected.Add((string)node.Tag);
+                        }
+                    }
+
+                    if (node.IsExpanded)
+                    {
+                        expanded.Add((string)node.Tag);
+                    }
+                }
+            }
+            ConfigMng.getInstance().m_curSts.selectedTitles = selected;
+            ConfigMng.getInstance().m_curSts.expandedNodes = expanded;
+            ConfigMng.getInstance().UpdateConfig();
         }
 
         EditPanel m_edtPanel;
@@ -151,7 +231,10 @@ namespace WindowsFormsApp1
         {
             if (!m_loadTitleCompleted) return;
 
-            var title = m_edtPanel.m_title;
+            var key = m_edtPanel.m_title.zPath.Replace('/','\\');
+            m_curTite = key;
+
+            var title = m_nodeDict[m_curTite].title;
             title.paragraphLst = m_content.getTitleParagraphs(m_edtPanel.m_dataTable);
             string jsTxt = titlesLstToJson(title);
             string htmlTxt = genHtmlTxt(jsTxt);
@@ -197,7 +280,12 @@ namespace WindowsFormsApp1
         {
             var title = m_nodeDict[(string)e.Node.Tag].title;
             if (title == null) return;
+            isEditing = true;
+            BeginEditTitle(title);
+        }
 
+        private void BeginEditTitle(MyTitle title)
+        {
             //edit
             m_edtPanel.m_title = new MyTitle() {
                 ID = title.ID,
@@ -263,6 +351,7 @@ namespace WindowsFormsApp1
             var selected = getSelectedTitles();
             if (selected.Count > 0)
             {
+                m_curTite = "";
                 string jsTxt = titlesLstToJson(selected);
                 string htmlTxt = genHtmlTxt(jsTxt);
                 UpdateWB(htmlTxt);
@@ -327,23 +416,9 @@ namespace WindowsFormsApp1
             string htmlTxt = genHtmlTxt(jsTxt);
             File.WriteAllText(path, htmlTxt);
         }
-        private void DisplayTitle(string key)
-        {
-            var tNode = m_nodeDict[key];
-            var title = tNode.title;
-            if (title == null) { return; }
-            //m_rtb.Clear();
-            //foreach(var par in title.paragraphLst)
-            //{
-            //    FontStyle fs = new FontStyle();
-            //    if (par.fontBold == -1) { fs |= FontStyle.Bold; }
-            //    if (par.fontItalic == -1) { fs |= FontStyle.Italic; }
-            //    m_rtb.Font = new Font(m_rtb.Font, fs);
-            //    m_rtb.SelectionIndent = par.leftIndent;
-            //    if (par.alignment == 1) {m_rtb.SelectionAlignment = HorizontalAlignment.Center;}
-            //    m_rtb.SelectedText = par.content + "\n";
-            //}
 
+        private void DisplayTitle(MyTitle title)
+        {
             title.paragraphLst = m_content.getTitleParagraphs(title.ID);
             string jsTxt = titlesLstToJson(title);
             string htmlTxt = genHtmlTxt(jsTxt);
@@ -389,7 +464,7 @@ namespace WindowsFormsApp1
 #elif use_chromium
             m_wb.Load(filename);
 #else
-            m_wb.DocumentText = htmlTxt;
+            m_wb.Navigate(filename);
 #endif
             //OpenInBrowser(htmlTxt);
         }
@@ -464,23 +539,32 @@ namespace WindowsFormsApp1
             parent.type = type;
             return parent;
         }
-        TreeNode CreateTreeNode(Node node)
+        TreeNode CreateTreeNode(Node node, TreeNode newNode = null)
         {
             //if (node.type != 'T') { node.size = (UInt64)node.childs.Count; }
             string name = node.size ==0 ? node.name :
                 string.Format("{0} ({1})", node.name, node.size);
-            TreeNode newNode = new TreeNode(name)
+            if (newNode == null) newNode = new TreeNode(name);
+            else newNode.Name = name;
+
+            newNode.Tag = node.id;
+            newNode.StateImageIndex = 0;
+
+            if (node.title != null)
             {
-                Tag = node.id,
-                StateImageIndex = 0
-            };
+                ContextMenuStrip contextMenuStrip;
+                contextMenuStrip = new ContextMenuStrip();
+                contextMenuStrip.Items.Add("Speech").Click += (s, e)=>{ SpeechTitle(node.title); };
+                contextMenuStrip.Items.Add("Stop").Click += (s, e) => { SpeechStop(); };
+                newNode.ContextMenuStrip = contextMenuStrip;
+            }
+            node.tnode = newNode;
             return newNode;
         }
         void renderTree(Node root)
         {
             var tree = m_tree;
             m_tree.Nodes.Clear();
-
             var tnRoot = CreateTreeNode(root);
             Queue<KeyValuePair<Node, TreeNode>> q = new Queue<KeyValuePair<Node, TreeNode>>();
             q.Enqueue(new KeyValuePair<Node, TreeNode>(root, tnRoot));
@@ -574,7 +658,19 @@ namespace WindowsFormsApp1
             else if (info.Location == TreeViewHitTestLocations.Label)
             {
                 string key = (string)e.Node.Tag;
-                DisplayTitle(key);
+
+                var tNode = m_nodeDict[key];
+                var title = tNode.title;
+                if (title == null) { return; }
+
+                if (m_curTite == key) return;
+                m_curTite = key;
+
+                DisplayTitle(title);
+                if (isEditing)
+                {
+                    BeginEditTitle(title);
+                }
             }
             else if (info.Location == System.Windows.Forms.TreeViewHitTestLocations.StateImage)
             {
@@ -662,6 +758,8 @@ namespace WindowsFormsApp1
             public UInt64 size;
             public string name;
             public List<Node> childs = new List<Node>();
+
+            public TreeNode tnode;
         }
 
         private List<TreeNode> GetAllLeafs(TreeNode parent)

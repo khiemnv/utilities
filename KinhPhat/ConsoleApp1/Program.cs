@@ -30,12 +30,13 @@ namespace ConsoleApp1
             zNo = zNo.Replace("L", "+50");
             zNo = zNo.Replace("C", "+100");
             var arr = zNo.Split(new char[] {'+'}, StringSplitOptions.RemoveEmptyEntries);
+            return 0; 
         }
         static void Main(string[] args)
         {
             //test parse no
 
-            return;
+            //return;
             //connect to db
             var path = Environment.CurrentDirectory;
             string zDb = "kinhtang.accdb";
