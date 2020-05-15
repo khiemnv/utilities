@@ -549,7 +549,7 @@ namespace WindowsFormsApp1
 
             newNode.Tag = node.id;
             newNode.StateImageIndex = 0;
-
+#if RightClickCMS
             if (node.title != null)
             {
                 ContextMenuStrip contextMenuStrip;
@@ -558,6 +558,7 @@ namespace WindowsFormsApp1
                 contextMenuStrip.Items.Add("Stop").Click += (s, e) => { SpeechStop(); };
                 newNode.ContextMenuStrip = contextMenuStrip;
             }
+#endif
             node.tnode = newNode;
             return newNode;
         }
@@ -857,7 +858,7 @@ namespace WindowsFormsApp1
                 if (i.Nodes.Count > 0) { UpdateChilds(i, idx); }
             }
         }
-        #endregion
+#endregion
     }
 
     [DataContract(Name = "MyTitle")]
