@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_editTitle", "..\test_e
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_speech", "..\test_speech\test_speech.csproj", "{1F45F524-0721-4120-86C2-53A324E028BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test_search", "..\test_search\test_search.csproj", "{7EF4D812-C42A-41B4-A017-050923337032}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,18 @@ Global
 		{1F45F524-0721-4120-86C2-53A324E028BF}.Release|x64.Build.0 = Release|Any CPU
 		{1F45F524-0721-4120-86C2-53A324E028BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{1F45F524-0721-4120-86C2-53A324E028BF}.Release|x86.Build.0 = Release|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Debug|x64.Build.0 = Debug|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Debug|x86.Build.0 = Debug|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Release|x64.ActiveCfg = Release|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Release|x64.Build.0 = Release|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Release|x86.ActiveCfg = Release|Any CPU
+		{7EF4D812-C42A-41B4-A017-050923337032}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -47,10 +47,13 @@ namespace WindowsFormsApp1
         {
             InitializeComponent();
 
-            var menu = new MenuStrip();
-            menu.Items.Add("&File").Click += (s, e) => { OnOpenDb(s, e); };
-            menu.Items.Add("&Preview").Click += (s, e) => { PreviewTitle(s, e); };
-            menu.Items.Add("&Export").Click += (s, e) => {ExportSelected(s, e); };
+            var menu = new MainMenu();
+            var file = menu.MenuItems.Add("&File");
+            file.MenuItems.Add("&Open").Click += (s, e) => { OnOpenDb(s, e); };
+            file.MenuItems.Add("&Preview").Click += (s, e) => { PreviewTitle(s, e); };
+            file.MenuItems.Add("&Export").Click += (s, e) => {ExportSelected(s, e); };
+            file.MenuItems.Add("&Find").Click += (s, e) => { OpenFindWnd(); };
+            this.Menu = menu;
 
             m_sc = new SplitContainer();
             m_sc.Dock = DockStyle.Fill;
@@ -110,6 +113,18 @@ namespace WindowsFormsApp1
 
             this.Load += OnLoadForm;
             this.FormClosed += OnCloseForm;
+        }
+
+        private void OpenFindWnd()
+        {
+            var dlg = new Form();
+            var srchPanel = new SearchPanel(ConfigMng.getInstance().m_cnnInfo.cnnStr);
+            dlg.Controls.Add(srchPanel.m_tblLayout);
+            srchPanel.OnSelectTitle += (s, e) => {
+                var title = m_titles.Find((x) => { return x.ID == e; });
+                DisplayTitle(title);
+            };
+            dlg.Show();
         }
 
         SpeechSynthesizer m_ss;
