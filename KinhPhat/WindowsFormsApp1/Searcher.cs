@@ -1,6 +1,9 @@
-﻿using System;
+﻿#define use_sqlite
+
+using System;
 using System.Collections.Generic;
 using System.Data.OleDb;
+using System.Data.SQLite;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -12,25 +15,33 @@ namespace WindowsFormsApp1
 {
     public class Searcher
     {
-        string cnnStr;
+        string m_cnnStr;
+        string m_searchDb;
 
-        public Searcher(string cnnStr)
+        public Searcher(string cnnStr, string srchDb = "")
         {
-            this.cnnStr = cnnStr;
+            this.m_cnnStr = cnnStr;
+            if (srchDb == "")
+            {
+                var reg = new Regex("Data Source=(.*);");
+                var m = reg.Match(cnnStr);
+                m_searchDb = m.Groups[1].Value.Replace(".accdb", "_search.db");
+            }
         }
 
-        public void BuildWordDb()
+        public void BuildSearchDb()
         {
-            var cnn = new OleDbConnection(cnnStr);
+            var cnn = new OleDbConnection(m_cnnStr);
             cnn.Open();
             var cmd = new OleDbCommand();
             cmd.Connection = cnn;
             cmd.CommandText = "SELECT * FROM paragraphs";
-            cmd.CommandText = "SELECT * FROM paragraphs WHERE ID > (SELECT MAX(paragraphId) FROM words)";
+            //cmd.CommandText = "SELECT * FROM paragraphs WHERE ID > (SELECT MAX(paragraphId) FROM words)";
+            cmd.CommandText = "SELECT * FROM paragraphs WHERE ID > 42207";  //last build search data
             var rd = cmd.ExecuteReader();
             var reg = new Regex(@"[\w]+(-\w+)*");
             reg = new Regex(@"[\w]+");
-            var dict = new Dictionary<string, UInt64>();
+            var dict = new HashSet<string>();
             var lst = new List<word>();
             var maxKeyLen = 0;
             myKey keygen = new myKey();
@@ -57,14 +68,14 @@ namespace WindowsFormsApp1
                         key = key,
                         pos = m.Index
                     });
-                    if (!dict.ContainsKey(key)) { dict.Add(key, 0); }
+                    dict.Add(key);
                 }
             }
             rd.Close();
             cmd.Dispose();
 
             //insert to word tbl
-            insertToDb(cnn, dict, lst);
+            AddToSearchDb(dict, lst);
 
             cnn.Close();
             cnn.Dispose();
@@ -105,16 +116,6 @@ namespace WindowsFormsApp1
             cmd.Dispose();
             cmd2.Dispose();
 
-            //var tDict = new Dictionary<string, UInt64>();
-            //var cmd2 = new OleDbCommand("Select * from keys",cnn);
-            //var rd = cmd2.ExecuteReader(CommandBehavior.SequentialAccess);
-            //while (rd.Read())
-            //{
-            //    tDict.Add(Convert.ToString(rd[1]), Convert.ToUInt64(rd[0]));
-            //}
-            //rd.Close();
-            //cmd2.Dispose();
-
             var cmd3 = new OleDbCommand("insert into words ([keyId],[titleId],[paragraphId],[pos],[word]) " +
                 "values (?,?,?,?,?)", cnn, trans);
             cmd3.Parameters.Add(new OleDbParameter("", OleDbType.BigInt));
@@ -134,6 +135,72 @@ namespace WindowsFormsApp1
             cmd3.Dispose();
             trans.Commit();
             trans.Dispose();
+        }
+
+        string sqliteCnnStr { get
+            {
+                return string.Format(@"Data Source={0};version=3;",m_searchDb);
+            } }
+
+        void AddToSearchDb(HashSet<string> keysH, List<word> wordsL)
+        {
+            //find keys
+            var cnn = new SQLiteConnection(sqliteCnnStr);
+            cnn.Open();
+            var cmd1 = new SQLiteCommand("select ID from keys where key = ?", cnn);
+            cmd1.Parameters.Add(new SQLiteParameter(System.Data.DbType.String));
+            var keysL = new List<string>();
+            var keysD = new Dictionary<string, UInt64>();
+            foreach (var key in keysH)
+            {
+                cmd1.Parameters[0].Value = key;
+                var res = cmd1.ExecuteScalar();
+                if (res == null)
+                {
+                    keysL.Add(key);
+                }
+                else
+                {
+                    keysD[key] = Convert.ToUInt64(res);
+                }
+            }
+            cmd1.Dispose();
+
+            //add keys
+            var trans = cnn.BeginTransaction();
+            var cmd = new SQLiteCommand("insert into keys (key) VALUES (?)", cnn, trans);
+            cmd.Parameters.Add(new SQLiteParameter("", System.Data.DbType.String));
+            var cmd2 = new SQLiteCommand("select last_insert_rowid()", cnn, trans);
+            foreach (var key in keysL)
+            {
+                cmd.Parameters[0].Value = key;
+                var eff = cmd.ExecuteNonQuery();
+                keysD[key] = Convert.ToUInt64(cmd2.ExecuteScalar());
+            }
+            cmd.Dispose();
+            cmd2.Dispose();
+
+            var cmd3 = new SQLiteCommand("insert into words (keyId,titleId,paragraphId,pos,word) " +
+                "values (?,?,?,?,?)", cnn, trans);
+            cmd3.Parameters.Add(new SQLiteParameter("", System.Data.DbType.UInt64));
+            cmd3.Parameters.Add(new SQLiteParameter("", System.Data.DbType.UInt64));
+            cmd3.Parameters.Add(new SQLiteParameter("", System.Data.DbType.UInt64));
+            cmd3.Parameters.Add(new SQLiteParameter("", System.Data.DbType.Int32));
+            cmd3.Parameters.Add(new SQLiteParameter("", System.Data.DbType.String));
+            foreach (var w in wordsL)
+            {
+                cmd3.Parameters[0].Value = keysD[w.key];
+                cmd3.Parameters[1].Value = w.titleId;
+                cmd3.Parameters[2].Value = w.parId;
+                cmd3.Parameters[3].Value = w.pos;
+                cmd3.Parameters[4].Value = w.content;
+                cmd3.ExecuteNonQuery();
+            }
+            cmd3.Dispose();
+            trans.Commit();
+            trans.Dispose();
+            cnn.Close();
+            cnn.Dispose();
         }
 
         static Dictionary<string, string> dict = new Dictionary<string, string>() {
@@ -211,7 +278,82 @@ namespace WindowsFormsApp1
 
         public SrchRes[] Find(string txt)
         {
-            var cnn = new OleDbConnection(cnnStr);
+            int nRow;
+            var arr = getWords(txt, out nRow);
+
+            var ret = calcDiff(arr, nRow);
+            return ret;
+        }
+
+        class MyTimer
+        {
+            int begin;
+            string msg;
+            public MyTimer(string msg)
+            {
+                begin = Environment.TickCount;
+                this.msg = msg;
+            }
+            ~MyTimer()
+            {
+                Debug.WriteLine("{0} {1}", msg, Environment.TickCount - begin);
+            }
+        }
+
+#if use_sqlite
+        private word[][] getWords(string txt, out int nRow)
+        {
+            var t = new MyTimer("getWords");
+            var cnn = new SQLiteConnection(sqliteCnnStr);
+            cnn.Open();
+            var cmd = new SQLiteCommand("select ID from keys where key = ?", cnn);
+            cmd.Parameters.Add(new SQLiteParameter("", System.Data.DbType.String));
+
+            var reg = new Regex(@"[\w]+");
+            var mc = reg.Matches(txt);
+            var tDict = new Dictionary<string, UInt64>();
+            foreach (Match m in mc)
+            {
+                cmd.Parameters[0].Value = m.Value;
+                var res = cmd.ExecuteScalar();
+                if (res != null)
+                {
+                    tDict.Add(m.Value, Convert.ToUInt64(res));
+                }
+            }
+            cmd.Dispose();
+
+            var cmd2 = new SQLiteCommand("select titleId, paragraphId, pos, word from words where keyId = ?", cnn);
+            cmd2.Parameters.Add(new SQLiteParameter("", System.Data.DbType.UInt64));
+            var arr = new word[tDict.Count][];
+            nRow = 0;
+            foreach (var keyId in tDict.Values)
+            {
+                var lst = new List<word>();
+                cmd2.Parameters[0].Value = keyId;
+                var rd = cmd2.ExecuteReader();
+                while (rd.Read())
+                {
+                    lst.Add(new word()
+                    {
+                        titleId = Convert.ToUInt64(rd[0]),
+                        parId = Convert.ToUInt64(rd[1]),
+                        pos = Convert.ToInt32(rd[2]),
+                        content = Convert.ToString(rd[3])
+                    });
+                }
+                arr[nRow++] = lst.ToArray();
+                rd.Close();
+            }
+
+            cnn.Close();
+            cnn.Dispose();
+            return arr;
+        }
+#else
+        private object[] getWords(string txt, out int nRow)
+        {
+            var cnn = new OleDbConnection(m_cnnStr);
             cnn.Open();
             var cmd = new OleDbCommand("select ID from keys where key = ?", cnn);
             cmd.Parameters.Add(new OleDbParameter("", OleDbType.Char, 32));
@@ -233,7 +375,7 @@ namespace WindowsFormsApp1
             var cmd2 = new OleDbCommand("select titleId, paragraphId, pos, word from words where keyId = ?", cnn);
             cmd2.Parameters.Add(new OleDbParameter("", OleDbType.BigInt));
             var arr = new object[tDict.Count];
-            var nRow = 0;
+            nRow = 0;
             foreach (var keyId in tDict.Values)
             {
                 var lst = new List<word>();
@@ -255,58 +397,62 @@ namespace WindowsFormsApp1
 
             cnn.Close();
             cnn.Dispose();
-
-            var ret = calcDiff(arr, nRow);
-            return ret;
+            return arr;
         }
-        SrchRes[] calcDiff(object[] arr, int nRow)
+#endif
+
+        SrchRes[] calcDiff(word[][] arr, int nRow)
         {
             var begin = Environment.TickCount;
-            var res =
-            ((List<word>)(arr[0]))
-            .Select((v) => new SrchRes() { path = new List<word> { v }, w = v, d = 0 })
-            .ToArray();
+            var res = new SrchRes[arr[0].Length];
+            for (int i = 0; i < arr[0].Length; i++)
+            {
+                res[i] = new SrchRes() { path = new int[] { i },d = 0};
+            }
             for (var row = 1; row < nRow; row++)
             {
-                var lst = (List<word>)arr[row];
+                var lst = arr[row];
+                var prevLst = arr[row - 1];
                 var tmplRes = new List<int[]>();
                 for (var j = 0; j < res.Length; j++)
                 {
-                    for (var k = 0; k < lst.Count; k++)
+                    var prevD = res[j].d;
+                    var prevI = res[j].path[row - 1];
+                    var prevW = prevLst[prevI];
+                    for (var k = 0; k < lst.Length; k++)
                     {
-                        if (res[j].w.titleId == lst[k].titleId)
+                        var curW = lst[k];
+                        if (prevW.titleId == curW.titleId)
                         {
-                            var d = wordDiff(res[j].w, lst[k]);
+                            //var d = wordDiff(res[j].w, lst[k]);
+                            var d = Convert.ToInt32(prevW.parId) - Convert.ToInt32(curW.parId);
+                            d *= d < 0 ? -100 : 100;
+                            d += Math.Abs(prevW.pos - curW.pos)*10;
+                            d += prevD;
                             tmplRes.Add(new int[] { j, k, d });
                         }
-                        //var d = wordDiff(res[j].w, lst[k]);
-                        //tmplRes[(j * lst.Count) + k] = ( new int[] { j, k, d });
                     }
                 }
-                //tmplRes.Sort((v1, v2) => { return v1[2] - v2[2]; });
-                //res = tmplRes.Take(100).Select((v) => new { path = res[v[0]].path + " " + lst[v[1]].content, w = lst[v[1]], d = res[v[0]].d + v[2] }).ToArray();
+                
                 var h = new myHeap<int[]>(tmplRes.ToArray(), (x, y) => x[2] - y[2]);
                 var n = Math.Min(100, tmplRes.Count);
-                var top100 = new List<int[]>();
+                var top100 = new SrchRes[100];
                 for (int i = 0; i < n; i++)
                 {
-                    top100.Add(h.PopMin());
+                    var t = h.PopMin();
+                    top100[i] = new SrchRes() { d = t[2], path = new int[row + 1]};
+                    res[t[0]].path.CopyTo(top100[i].path, 0);
+                    top100[i].path[row] = t[1];
                 }
-                res = top100.Select((v) =>
-                {
-                    var obj = new SrchRes()
-                    {
-                        path = new List<word>(),
-                        w = lst[v[1]],
-                        d = res[v[0]].d + v[2]
-                    };
-                    obj.path.AddRange(res[v[0]].path);
-                    obj.path.Add(lst[v[1]]);
-                    return obj;
-                }).ToArray();
+                res = top100;
             }
             var elapsed = Environment.TickCount - begin;
             Debug.WriteLine("calc diff {0}", elapsed);
+            foreach(var item in res)
+            {
+                var row = 0;
+                item.detail = item.path.Select(v => arr[row++][v]).ToList();
+            }
             return res;
         }
 
@@ -332,9 +478,9 @@ namespace WindowsFormsApp1
 
     public class SrchRes
     {
-        public List<word> path;
-        public word w;
+        public int[] path;
         public int d;
+        public List<word> detail;
     }
     public class word
     {
@@ -411,6 +557,7 @@ namespace WindowsFormsApp1
         string cnnStr;
         public TableLayoutPanel m_tblLayout;
         ListView m_lstV;
+        StatusBar m_sts;
         public SearchPanel(string cnnStr)
         {
             this.cnnStr = cnnStr;
@@ -424,6 +571,7 @@ namespace WindowsFormsApp1
             var btn = new Button();
             btn.Text = "Search";
             btn.AutoSize = true;
+            btn.Anchor = AnchorStyles.Right;
             btn.Click += (s, e) =>
             {
                 OnSearch(edt.Text);
@@ -446,10 +594,21 @@ namespace WindowsFormsApp1
               };
             m_lstV = lst;
 
+            var sts = new StatusBar();
+            sts.Dock = DockStyle.Bottom;
+            sts.ShowPanels = false;
+            m_sts = sts;
+
             int iRow = 0;
+            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            m_tblLayout.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             m_tblLayout.Controls.Add(edt, 0, iRow++);
             m_tblLayout.Controls.Add(btn, 0, iRow++);
             m_tblLayout.Controls.Add(lst, 0, iRow++);
+            m_tblLayout.Controls.Add(sts, 0, iRow++);
         }
 
         public event EventHandler<UInt64> OnSelectTitle;
@@ -460,9 +619,15 @@ namespace WindowsFormsApp1
 
         private void OnSearch(string txt)
         {
+            if (txt == "") return;
+
+            var begin = Environment.TickCount;
             var srch = new Searcher(cnnStr);
+            //srch.BuildSearchDb();
+            //return;
             var res = srch.Find(txt);
             showSearchRes(res);
+            m_sts.Text = string.Format("elapsed time: {0}(ms)", Environment.TickCount-begin);
         }
 
         void showSearchRes(SrchRes[] res)
@@ -472,6 +637,7 @@ namespace WindowsFormsApp1
             listView1.Columns.Add("content");
             listView1.Columns.Add("title");
             listView1.Columns.Add("paragraph");
+            listView1.Columns.Add("pos");
             listView1.Columns.Add("diff");
             listView1.GridLines = true;
             foreach (var rec in res)
@@ -479,10 +645,12 @@ namespace WindowsFormsApp1
                 //var tempTxt = string.Format("{0} {1} {2} {3}", 
                 //    string.Join(" ", rec.path.Select((v)=>v.content).ToArray()),
                 //    rec.d, rec.w.titleId, rec.w.parId);
-                var li = listView1.Items.Add(string.Join(" ", rec.path.Select((v) => v.content).ToArray()));
-                li.SubItems.Add(rec.w.titleId.ToString());
-                li.SubItems.Add(rec.w.parId.ToString());
-                li.SubItems.Add(rec.d.ToString());
+                var li = listView1.Items.Add(string.Join(" ", rec.detail.Select((v) => v.content)));
+                li.SubItems.Add(rec.detail[0].titleId.ToString());
+                li.SubItems.Add(string.Join(" ", rec.detail.Select(v=>v.parId)));
+                li.SubItems.Add(string.Join(" ", rec.detail.Select(v => v.pos)));
+                var sub = li.SubItems.Add(rec.d.ToString());
+                
             }
         }
     }
