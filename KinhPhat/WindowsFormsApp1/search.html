@@ -1,0 +1,92 @@
+﻿<html>
+<head>
+    <script type="text/javascript">
+        CefSharp.BindObjectAsync("jsHandler", "jsHandler");
+    </script>
+    <title>Test Page</title>
+    <style>
+        table{
+            width:100%;
+            border-collapse: collapse;
+        }
+        td, th {
+        border: 1px solid #ddd;
+        text-align: left;
+        }
+        span.title:hover {
+            color: blue;
+            text-decoration: underline;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="id_content">
+        <table>
+            <tr>
+                <th>Title</th>
+                <th>Result</th>
+            </tr>
+            <tr>
+                <td onclick="openTitle(234)">title 234</td>
+                <td>text before <mark>word</mark> text after</td>
+            </tr>   
+        </table>
+    </div>
+    <button onclick="window.jsHandler.handleJsCall(1)">button</button>
+    <script>
+        function openTitle(titleId) {
+            //alert(titleId);
+            window.jsHandler.handleJsCall(titleId);
+        }
+    </script>
+    <script>
+        //methods///////////////////////////////////
+        function render(data) {
+            var d = document.getElementById("id_content");
+            d.innerHTML = "";
+            var tbl = d.appendChild(document.createElement("table"));
+            var tr = tbl.appendChild(document.createElement("tr"));
+            var cols = ["Title", "Result"];
+            for (var i in cols) {
+                var th = tr.appendChild(document.createElement("th"));
+                th.innerText = cols[i];
+            }
+
+            for (var i in data) {
+                var rec = data[i];
+                var tr = tbl.appendChild(document.createElement("tr"));
+                var td = tr.appendChild(document.createElement("td"));
+                var s = td.appendChild(document.createElement("span"));
+                s.innerText = rec.title;
+                s.onclick = function () { openTitle(rec.titleId) };
+                s.className = "title";
+
+                var td2 = tr.appendChild( document.createElement("td"));
+                for (var j in rec.txtLst) {
+                    var mt = rec.txtLst[j];
+                    var spn = td2.appendChild(document.createElement("span"));
+                    if (mt.style == 1) {
+                        spn.innerHTML= "<mark>" + mt.txt + "<mark>";
+                    } else {
+                        spn.innerText = mt.txt.replace(/\u000b/g, '\r');
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        //global data///////////////////////////////
+        var g_lectLst = [{ "title": "507. Chuyện sức cám dỗ mạnh (Tiền thân Mahà-Palobhana)\r", "titleId": 508, "txtLst": [{ "style": 0, "txt": " trong biển cả " }, { "style": 1, "txt": "cứ" }, { "style": 0, "txt": " " }, { "style": 1, "txt": "chìm" }] }, { "title": "536. Chuyện Chúa Chim Kunàla (Tiền thân Kunàla)\r", "titleId": 537, "txtLst": [{ "style": 0, "txt": " đọa đày;\u000bChúng " }, { "style": 1, "txt": "cứ" }, { "style": 0, "txt": " " }, { "style": 1, "txt": "chìm" }] }];
+        var jsTxt = null;
+        if (jsTxt != null) {
+            g_lectLst = jsTxt;
+            document.getElementById("id_content").innerHTML = "";
+        }
+    </script>
+    <script>
+        //main//////////////////////////////////////
+        render(g_lectLst);
+    </script>
+</body>
+</html>
