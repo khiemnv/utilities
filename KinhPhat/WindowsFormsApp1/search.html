@@ -13,7 +13,7 @@
         border: 1px solid #ddd;
         text-align: left;
         }
-        span.title:hover {
+        td.title:hover {
             color: blue;
             text-decoration: underline;
             cursor:pointer;
@@ -33,11 +33,11 @@
             </tr>   
         </table>
     </div>
-    <button onclick="window.jsHandler.handleJsCall(1)">button</button>
+    <!--<button onclick="window.jsHandler.handleJsCall(1)">button</button>-->
     <script>
         function openTitle(titleId) {
             //alert(titleId);
-            window.jsHandler.handleJsCall(titleId);
+            window.jsHandler.handleJsCall(titleId.toString());
         }
     </script>
     <script>
@@ -54,25 +54,32 @@
             }
 
             for (var i in data) {
-                var rec = data[i];
-                var tr = tbl.appendChild(document.createElement("tr"));
-                var td = tr.appendChild(document.createElement("td"));
-                var s = td.appendChild(document.createElement("span"));
-                s.innerText = rec.title;
-                s.onclick = function () { openTitle(rec.titleId) };
-                s.className = "title";
+                recAdd(data[i], tbl);
+            }
+        }
+        function recAdd(rec, tbl) {
+            var tr = tbl.appendChild(document.createElement("tr"));
+            var s = tr.appendChild(document.createElement("td"));
+            //var s = td.appendChild(document.createElement("span"));
+            s.innerText = rec.title;
+            s.onclick = function () { openTitle(rec.titleId) };
+            s.className = "title";
 
-                var td2 = tr.appendChild( document.createElement("td"));
-                for (var j in rec.txtLst) {
-                    var mt = rec.txtLst[j];
-                    var spn = td2.appendChild(document.createElement("span"));
-                    if (mt.style == 1) {
-                        spn.innerHTML= "<mark>" + mt.txt + "<mark>";
-                    } else {
-                        spn.innerText = mt.txt.replace(/\u000b/g, '\r');
-                    }
+            var td2 = tr.appendChild(document.createElement("td"));
+            var txt = "";
+            for (var j in rec.txtLst) {
+                var mt = rec.txtLst[j];
+                //var spn = td2.appendChild(document.createElement("span"));
+                if (mt.style == 1) {
+                    //spn.innerHTML = "<mark>" + mt.txt + "</mark>";
+                    txt += "<mark>" + mt.txt + "</mark>";
+                } else {
+                    //spn.innerText = mt.txt.replace(/\u000b/g, '\r');
+                    txt += mt.txt.replace(/\u000b/g, '<br>');
                 }
             }
+            td2.innerHTML = txt;
+            return tr;
         }
     </script>
     <script>

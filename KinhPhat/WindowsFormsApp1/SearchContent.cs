@@ -1,31 +1,23 @@
 ﻿#define use_sqlite
-#define use_browser
 
 using System;
 using System.Collections.Generic;
 using System.Data.OleDb;
 using System.Data.SQLite;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
-    public class Searcher
+    public class SearchContent
     {
         string m_cnnStr;
         string m_searchDb;
         SQLiteConnection m_sqliteCnn;
         OleDbConnection m_cnn;
 
-        public Searcher(string cnnStr, string srchDb = "")
+        public SearchContent(string cnnStr, string srchDb = "")
         {
             this.m_cnnStr = cnnStr;
             if (srchDb == "")
@@ -48,7 +40,7 @@ namespace WindowsFormsApp1
             m_sqliteCnn.Dispose();
         }
 
-        ~Searcher()
+        ~SearchContent()
         {
         }
 
@@ -61,7 +53,7 @@ namespace WindowsFormsApp1
             var reg = new Regex(@"[\w]+(-\w+)*");
             reg = new Regex(@"[\w]+");
             var dict = new HashSet<string>();
-            var lst = new List<word>();
+            var lst = new List<MyWord>();
             var maxKeyLen = 0;
             myKey keygen = new myKey();
             while (rd.Read())
@@ -79,7 +71,7 @@ namespace WindowsFormsApp1
                         Debug.WriteLine("{0} {1} {2} {3} {4}", titleId, parId, parOrd, m.Index, m.Value);
                     }
                     if (key.Length > maxKeyLen) { maxKeyLen = key.Length; }
-                    lst.Add(new word()
+                    lst.Add(new MyWord()
                     {
                         content = m.Value,
                         titleId = titleId,
@@ -97,7 +89,7 @@ namespace WindowsFormsApp1
             AddToSearchDb(dict, lst);
         }
 
-        void insertToDb(OleDbConnection cnn, Dictionary<string, UInt64> keysD, List<word> wordsL)
+        void insertToDb(OleDbConnection cnn, Dictionary<string, UInt64> keysD, List<MyWord> wordsL)
         {
             //find keys
             var cmd1 = new OleDbCommand("select ID from keys where key = ?", cnn);
@@ -161,7 +153,7 @@ namespace WindowsFormsApp1
             }
         }
 
-        void AddToSearchDb(HashSet<string> keysH, List<word> wordsL)
+        void AddToSearchDb(HashSet<string> keysH, List<MyWord> wordsL)
         {
             //find keys
             var cnn = m_sqliteCnn;
@@ -342,23 +334,8 @@ namespace WindowsFormsApp1
             };
         }
 
-        class MyTimer
-        {
-            int begin;
-            string msg;
-            public MyTimer(string msg)
-            {
-                begin = Environment.TickCount;
-                this.msg = msg;
-            }
-            ~MyTimer()
-            {
-                Debug.WriteLine("{0} {1}", msg, Environment.TickCount - begin);
-            }
-        }
-
 #if use_sqlite
-        private word[][] getWords(string txt, out int nRow)
+        private MyWord[][] getWords(string txt, out int nRow)
         {
             var t = new MyTimer("getWords");
             var cnn = new SQLiteConnection(sqliteCnnStr);
@@ -382,16 +359,16 @@ namespace WindowsFormsApp1
 
             var cmd2 = new SQLiteCommand("select titleId, paragraphId, pos, word from words where keyId = ?", cnn);
             cmd2.Parameters.Add(new SQLiteParameter("", System.Data.DbType.UInt64));
-            var arr = new word[tDict.Count][];
+            var arr = new MyWord[tDict.Count][];
             nRow = 0;
             foreach (var keyId in tDict.Values)
             {
-                var lst = new List<word>();
+                var lst = new List<MyWord>();
                 cmd2.Parameters[0].Value = keyId;
                 var rd = cmd2.ExecuteReader();
                 while (rd.Read())
                 {
-                    lst.Add(new word()
+                    lst.Add(new MyWord()
                     {
                         titleId = Convert.ToUInt64(rd[0]),
                         parId = Convert.ToUInt64(rd[1]),
@@ -458,7 +435,7 @@ namespace WindowsFormsApp1
         }
 #endif
 
-        SrchRec[] calcDiff(word[][] arr, int nRow)
+        SrchRec[] calcDiff(MyWord[][] arr, int nRow)
         {
             var begin = Environment.TickCount;
             var res = new SrchRec[arr[0].Length];
@@ -491,7 +468,7 @@ namespace WindowsFormsApp1
                     }
                 }
 
-                var h = new myHeap<int[]>(tmplRes.ToArray(), (x, y) => x[2] - y[2]);
+                var h = new MyHeap<int[]>(tmplRes.ToArray(), (x, y) => x[2] - y[2]);
                 var n = Math.Min(100, tmplRes.Count);
                 var top100 = new SrchRec[100];
                 for (int i = 0; i < n; i++)
@@ -513,7 +490,7 @@ namespace WindowsFormsApp1
             return res;
         }
 
-        int wordDiff(word w1, word w2)
+        int wordDiff(MyWord w1, MyWord w2)
         {
             var a1 = new int[] {
                 Convert.ToInt32(w1.titleId),
@@ -532,6 +509,20 @@ namespace WindowsFormsApp1
             return diff;
         }
     }
+    public class MyTimer
+    {
+        int begin;
+        string msg;
+        public MyTimer(string msg)
+        {
+            begin = Environment.TickCount;
+            this.msg = msg;
+        }
+        ~MyTimer()
+        {
+            Debug.WriteLine("{0} {1}", msg, Environment.TickCount - begin);
+        }
+    }
 
     public class SrchResult
     {
@@ -543,9 +534,9 @@ namespace WindowsFormsApp1
     {
         public int[] path;
         public int d;
-        public List<word> detail;
+        public List<MyWord> detail;
     }
-    public class word
+    public class MyWord
     {
         public string content;
         public UInt64 titleId;
@@ -553,12 +544,12 @@ namespace WindowsFormsApp1
         public int pos;
         public string key;
     }
-    public class myHeap<T>
+    public class MyHeap<T>
     {
         T[] h;
         Func<T, T, int> comp;
         int len;
-        public myHeap(T[] arr, Func<T, T, int> comp)
+        public MyHeap(T[] arr, Func<T, T, int> comp)
         {
             h = arr;
             this.comp = comp;
@@ -614,262 +605,4 @@ namespace WindowsFormsApp1
         }
     }
 
-
-    public class SearchPanel
-    {
-        string cnnStr;
-        public TableLayoutPanel m_tblLayout;
-#if use_browser
-        class JsHandler
-        {
-            public EventHandler<int> OnTitleSelected;
-            public void HandleJsCall(int arg)
-            {
-                //MessageBox.Show($"Value Provided From JavaScript: {arg.ToString()}", "C# Method Called");
-                OnTitleSelected?.Invoke(this, arg);
-            }
-        }
-        protected CefSharp.WinForms.ChromiumWebBrowser m_wb;
-#else
-        ListView m_lstV;
-#endif
-        StatusBar m_sts;
-        public SearchPanel(string cnnStr)
-        {
-            this.cnnStr = cnnStr;
-
-            m_tblLayout = new TableLayoutPanel();
-            m_tblLayout.Dock = DockStyle.Fill;
-
-            var edt = new TextBox();
-            edt.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-
-            var btn = new Button();
-            btn.Text = "Search";
-            btn.AutoSize = true;
-            btn.Anchor = AnchorStyles.Right;
-            btn.Click += (s, e) =>
-            {
-                OnSearch(edt.Text);
-            };
-
-#if use_browser
-            var lst = new CefSharp.WinForms.ChromiumWebBrowser("");
-            lst.Dock = DockStyle.Fill;
-            JsHandler jsHandler = new JsHandler();
-            jsHandler.OnTitleSelected += (s, e) =>
-            {
-                Debug.WriteLine("OnSelectTitle {0}", e);
-                OnSelectTitle?.Invoke(s, Convert.ToUInt64(e));
-            };
-            lst.JavascriptObjectRepository.Register("jsHandler", jsHandler, true);
-            m_wb = lst;
-#else
-            var lst = new ListView();
-            lst.View = View.Details;
-            lst.FullRowSelect = true;
-            lst.GridLines = true;
-            lst.Dock = DockStyle.Fill;
-            lst.ItemSelectionChanged += (s, e) =>
-              {
-                  //UInt64 titleId = 0;
-                  foreach (ListViewItem li in lst.SelectedItems)
-                  {
-                      //UInt64.TryParse(li.SubItems[1].Text, out titleId);
-                      //OnSelectTitle(titleId);
-                      OnSelectTitle?.Invoke(s, Convert.ToUInt64(li.SubItems[1].Tag));
-                      break;
-                  }
-              };
-            m_lstV = lst;
-#endif
-
-                        var sts = new StatusBar();
-            sts.Dock = DockStyle.Bottom;
-            sts.ShowPanels = false;
-            m_sts = sts;
-
-            int iRow = 0;
-            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            m_tblLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            m_tblLayout.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
-            m_tblLayout.Controls.Add(edt, 0, iRow++);
-            m_tblLayout.Controls.Add(btn, 0, iRow++);
-            m_tblLayout.Controls.Add(lst, 0, iRow++);
-            m_tblLayout.Controls.Add(sts, 0, iRow++);
-        }
-
-        public event EventHandler<UInt64> OnSelectTitle;
-        private void SelectTitle(int titleId)
-        {
-
-        }
-
-        private void OnSearch(string txt)
-        {
-            if (txt == "") return;
-
-            var begin = Environment.TickCount;
-            var srch = new Searcher(cnnStr);
-            //srch.BuildSearchDb();
-            //return;
-            var res = srch.Find(txt);
-            showSearchRes(res);
-            m_sts.Text = string.Format("elapsed time: {0}(ms)", Environment.TickCount - begin);
-            srch.Close();
-        }
-
-        public class MarkedTxt
-        {
-            public string txt;
-            public int style;   //1->marked 
-        }
-        public class MarkedTitle
-        {
-            public string title;
-            public UInt64 titleId;
-            public List<MarkedTxt> txtLst;
-        }
-
-
-        List<MarkedTitle> convJsData(SrchResult res)
-        {
-            var lst = new List<MarkedTitle>();
-            foreach (var rec in res.recs)
-            {
-                var mt = new MarkedTitle();
-                mt.titleId = rec.detail[0].titleId;
-                mt.title = res.titles.Find((t) => t.ID == mt.titleId).zTitle;
-                //<par,[point]>
-                var tDict = new Dictionary<UInt64, List<int[]>>();
-                var parLst = new List<MyParagraph>();
-                foreach(var w in rec.detail)
-                {
-                    var par = res.paragraphs.Find(p => p.ID == w.parId);
-                    if (tDict.ContainsKey(par.ID))
-                    {
-                        tDict[par.ID].Add(new int[] { w.pos, w.content.Length });
-                        tDict[par.ID].Sort((v1, v2) => v1[0] - v2[0]);
-                    }
-                    else
-                    {
-                        tDict[par.ID] = new List<int[]>
-                        {
-                            new int[] { w.pos, w.content.Length }
-                        };
-                        parLst.Add(par);
-                    }
-                }
-                //split
-                mt.txtLst = new List<MarkedTxt>();
-                foreach (var p in tDict)
-                {
-                    string txt = parLst.Find(par => par.ID == p.Key).content;
-                    int cur = 0;
-                    foreach(var point in p.Value)
-                    {
-                        // txt before [point]
-                        var offset = point[0];
-                        var len = point[1];
-                        if(offset > cur)
-                        {
-                            var n = Math.Min(20, offset - cur);
-                            var pos = txt.IndexOf(' ', offset - n, n);
-                            if (pos != -1) { n = offset - pos; }
-
-                            mt.txtLst.Add(new MarkedTxt()
-                            {
-                                txt = txt.Substring(offset - n, n)
-                            });
-                        }
-                        mt.txtLst.Add(new MarkedTxt()
-                        {
-                            txt = txt.Substring(offset, len),
-                            style = 1
-                        });
-                        cur = offset + len;
-                    }
-                }
-                
-                lst.Add(mt);
-            }
-
-            return lst;
-        }
-
-        string genJsTxt(List<MarkedTitle> lst)
-        {
-            Type[] knownTypes = new Type[] {
-                    typeof(MarkedTxt),
-                    typeof(MarkedTitle),
-                };
-
-            DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings
-            {
-                IgnoreExtensionDataObject = true,
-                EmitTypeInformation = EmitTypeInformation.AsNeeded,
-                KnownTypes = knownTypes
-            };
-            var x = new DataContractJsonSerializer(lst.GetType(), settings);
-
-            var mem = new MemoryStream();
-            x.WriteObject(mem, lst);
-            StreamReader sr = new StreamReader(mem);
-            mem.Position = 0;
-            string myStr = sr.ReadToEnd();
-            sr.Dispose();
-            mem.Dispose();
-            return myStr;
-        }
-        private string genHtmlTxt(string jsTxt)
-        {
-            var path = @"D:\tmp\github\utilities\KinhPhat\WindowsFormsApp1\search.html";
-            var txt = File.ReadAllText(path);
-            var htmlTxt = txt.Replace("var jsTxt = null", "var jsTxt = " + jsTxt);
-            return htmlTxt;
-        }
-        void showSearchRes(SrchResult res)
-        {
-#if use_browser
-            //create json data [title, texthtml]
-            var data = convJsData(res);
-            var jsTxt = genJsTxt(data);
-            string htmlTxt = genHtmlTxt(jsTxt);
-            string filename = string.Format(@"{0}{1}", Path.GetTempPath(), "page.htm");
-            File.WriteAllText(filename, htmlTxt);
-            m_wb.Load(filename);
-#else
-            var listView1 = m_lstV;
-            listView1.Clear();
-            listView1.Columns.Add("content");
-            listView1.Columns.Add("title");
-            listView1.Columns.Add("paragraph");
-            listView1.Columns.Add("pos");
-            listView1.Columns.Add("diff");
-            listView1.Columns.Add("detail");
-            listView1.GridLines = true;
-            foreach (var rec in res.recs)
-            {
-                //var tempTxt = string.Format("{0} {1} {2} {3}", 
-                //    string.Join(" ", rec.path.Select((v)=>v.content).ToArray()),
-                //    rec.d, rec.w.titleId, rec.w.parId);
-                var li = listView1.Items.Add(string.Join(" ", rec.detail.Select((v) => v.content)));
-                var titleId = rec.detail[0].titleId;
-                var sub = li.SubItems.Add(res.titles.Find((t) => t.ID == titleId).zTitle);
-                sub.Tag = rec.detail[0].titleId;
-                li.SubItems.Add(string.Join(" ", rec.detail.Select(v => v.parId)));
-                li.SubItems.Add(string.Join(" ", rec.detail.Select(v => v.pos)));
-                li.SubItems.Add(rec.d.ToString());
-                var w = rec.detail[0];
-                var parId = w.parId;
-                var parTxt = res.paragraphs.Find((t) => t.ID == parId).content;
-                var txt = parTxt.Substring(0, w.pos) + "[" + w.content + "]" + parTxt.Substring(w.pos + w.content.Length);
-                li.SubItems.Add(parTxt);
-            }
-#endif
-        }
-
-    }
 }

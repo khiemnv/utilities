@@ -26,6 +26,7 @@ namespace test_search
                 Debug.WriteLine("titleId {0}", e);
             };
             this.Controls.Add(m_srchPanel.m_tblLayout);
+            this.AcceptButton = m_srchPanel.m_acceptBtn;
         }
 
         string cnnStr
@@ -47,7 +48,7 @@ namespace test_search
                 arr[i] = rnd.Next(1, 100);
             }
             Func<int, int, int> cmp = (x, y) => x - y;
-            var h = new myHeap<int>(arr, cmp);
+            var h = new MyHeap<int>(arr, cmp);
             for (int i = 0; i < 10; i++)
             {
                 var min = h.PopMin();
