@@ -19,6 +19,7 @@ namespace WindowsFormsApp1
     {
         public List<string> selectedTitles = new List<string>();
         public List<string> expandedNodes = new List<string>();
+        public string readingTitle;
 
         public bool AddSelectedTitle(string path)
         {
@@ -118,7 +119,7 @@ namespace WindowsFormsApp1
             
             return m_instance;
         }
-        public void UpdateConfig()
+        public void SaveConfig()
         {
             var sz = createSerializer();
             XmlWriterSettings settings = new XmlWriterSettings();

@@ -30,7 +30,7 @@ namespace WindowsFormsApp1
         RichTextBox m_rtb;
         List<MyTitle> m_titles;
 
-        string m_curTite = "";
+        string m_curTitle = "";     //xxx/yyy
         bool isEditing = false;
 
 #if use_gecko
@@ -118,11 +118,13 @@ namespace WindowsFormsApp1
         private void OpenFindWnd()
         {
             var dlg = new Form();
+            dlg.Name = "Find";
+            dlg.Icon = new Icon(@"..\..\..\Search.ico");
             var srchPanel = new SearchPanel(ConfigMng.getInstance().m_cnnInfo.cnnStr);
             dlg.Controls.Add(srchPanel.m_tblLayout);
             srchPanel.OnSelectTitle += (s, e) => {
                 var title = m_titles.Find((x) => { return x.ID == e; });
-                DisplayTitle(title);
+                DisplayTitle2(title);
             };
             dlg.Show();
         }
@@ -174,17 +176,36 @@ namespace WindowsFormsApp1
             if (cnnStr == null && OpenDbDlg())
             {
                 cfg.m_cnnInfo.cnnStr = m_cnnStr;
-                cfg.UpdateConfig();
                 cfg.m_content.initCnn(m_cnnStr);
                 renderTree();
+
+                //set form title
+                UpdateFormName();
             }
             else
             {
                 m_cnnStr = cfg.m_cnnInfo.cnnStr;
                 cfg.m_content.initCnn(m_cnnStr);
                 renderTree();
+
                 //restore state
                 restoreSts();
+              
+                //set form title
+                UpdateFormName();
+            }
+
+        }
+
+        void UpdateFormName()
+        {
+            foreach(var title in m_titles)
+            {
+                var path = title.zPath;
+                var n = path.IndexOf('/');
+                if (n == -1) break;
+                this.Text = path.Substring(0,n);
+                break;
             }
         }
 
@@ -194,14 +215,24 @@ namespace WindowsFormsApp1
         }
         void restoreSts()
         {
-            foreach (string path in ConfigMng.getInstance().m_curSts.selectedTitles) {
+            var sts = ConfigMng.getInstance().m_curSts;
+            foreach (string path in sts.selectedTitles) {
                 var node = GetTreeNode(path);
                 Check(node, true);
             }
-            foreach (string path in ConfigMng.getInstance().m_curSts.expandedNodes)
+            foreach (string path in sts.expandedNodes)
             {
                 var node = GetTreeNode(path);
                 node.Expand();
+            }
+
+            foreach (var title in m_titles)
+            {
+                if (title.zPath == sts.readingTitle)
+                {
+                    DisplayTitle2(title);
+                    break;
+                }
             }
         }
 
@@ -237,7 +268,8 @@ namespace WindowsFormsApp1
             }
             ConfigMng.getInstance().m_curSts.selectedTitles = selected;
             ConfigMng.getInstance().m_curSts.expandedNodes = expanded;
-            ConfigMng.getInstance().UpdateConfig();
+            ConfigMng.getInstance().m_curSts.readingTitle = m_curTitle;
+            ConfigMng.getInstance().SaveConfig();
         }
 
         EditPanel m_edtPanel;
@@ -246,10 +278,10 @@ namespace WindowsFormsApp1
         {
             if (!m_loadTitleCompleted) return;
 
-            var key = m_edtPanel.m_title.zPath.Replace('/','\\');
-            m_curTite = key;
+            var key = m_edtPanel.m_title.zPath;
+            m_curTitle = key;
 
-            var title = m_nodeDict[m_curTite].title;
+            var title = m_nodeDict[key].title;
             title.paragraphLst = m_content.getTitleParagraphs(m_edtPanel.m_dataTable);
             string jsTxt = titlesLstToJson(title);
             string htmlTxt = genHtmlTxt(jsTxt);
@@ -326,10 +358,14 @@ namespace WindowsFormsApp1
                 var cnf = ConfigMng.getInstance();
                 cnf.m_content.closeCnn();
                 cnf.m_cnnInfo.cnnStr = m_cnnStr;
-                cnf.UpdateConfig();
                 cnf.m_content.initCnn(m_cnnStr);
-
                 renderTree();
+
+                //reset current title
+                m_curTitle = "";
+
+                //update form title
+                UpdateFormName();
             }
         }
 
@@ -366,7 +402,9 @@ namespace WindowsFormsApp1
             var selected = getSelectedTitles();
             if (selected.Count > 0)
             {
-                m_curTite = "";
+                //reset current title
+                m_curTitle = "";
+
                 string jsTxt = titlesLstToJson(selected);
                 string htmlTxt = genHtmlTxt(jsTxt);
                 UpdateWB(htmlTxt);
@@ -434,6 +472,7 @@ namespace WindowsFormsApp1
 
         private void DisplayTitle(MyTitle title)
         {
+            Debug.Assert(title.zPath != m_curTitle);
             title.paragraphLst = m_content.getTitleParagraphs(title.ID);
             string jsTxt = titlesLstToJson(title);
             string htmlTxt = genHtmlTxt(jsTxt);
@@ -535,7 +574,7 @@ namespace WindowsFormsApp1
             Node child;
             for (int j = 1; j < arr.Length; j++)
             {
-                path = path + "\\" + arr[j];
+                path = path + "/" + arr[j];
                 if (tDict.ContainsKey(path))
                 {
                     child = tDict[path];
@@ -679,14 +718,8 @@ namespace WindowsFormsApp1
                 var title = tNode.title;
                 if (title == null) { return; }
 
-                if (m_curTite == key) return;
-                m_curTite = key;
-
-                DisplayTitle(title);
-                if (isEditing)
-                {
-                    BeginEditTitle(title);
-                }
+                //avoid re display title
+                DisplayTitle2(title);
             }
             else if (info.Location == System.Windows.Forms.TreeViewHitTestLocations.StateImage)
             {
@@ -699,6 +732,20 @@ namespace WindowsFormsApp1
                 return;
             }
         }
+
+        void DisplayTitle2(MyTitle title)
+        {
+            if (m_curTitle == title.zPath) return;
+
+            DisplayTitle(title);
+            if (isEditing)
+            {
+                BeginEditTitle(title);
+            }
+
+            m_curTitle = title.zPath;
+        }
+
         protected enum TreeStyle
         {
             check,

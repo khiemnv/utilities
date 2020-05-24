@@ -810,7 +810,8 @@ namespace WindowsFormsApp1
                 {
                     var title = new MyTitle();
                     title.ID = Convert.ToUInt64(reader2["ID"]);
-                    title.zTitle = Convert.ToString(reader2["title"]);
+                    title.zTitle = Convert.ToString(reader2["title"])
+                        .TrimEnd(new char[] { '\r', '\n', '\v' });
                     title.pathId = Convert.ToUInt64(reader2["pathId"]);
                     title.zPath = pi.path + "/" + title.zTitle;
                     title.ord = Convert.ToInt32(reader2["ord"]);
