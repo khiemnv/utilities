@@ -106,7 +106,7 @@
                     <button style="width: auto" id="showHideMenuBtn" onclick="menuShowHide()">目</button>
                 </td>
                 <td>
-                    <span id="span1" style="white-space:nowrap">Kinh Tiểu Bộ</span>
+                    <span id="id_sutra" style="white-space:nowrap">Kinh Tiểu Bộ</span>
                 </td>
                 <td style="width: 100%"></td>
                 <td>
@@ -1106,9 +1106,15 @@
             adjFont(g_ratio);
         }
         function adjFont(ratio) {
-            var el = document.getElementById("span1");
+            var el = document.getElementById("id_sutra");
             var w = el.offsetWidth;
-            var baseW = 87;
+            var key = el.innerText;
+            var d = {
+                'Kinh Tiểu Bộ': 87,
+                'Kinh Trường Bộ': 106,
+                "Trường Bộ Kinh Digha Nikaya": 200,
+            };
+            var baseW = (d[key] != null) ? d[key] : w;
             var scale = baseW * 1000 / w * ratio;
             //document.getElementById("log").innerText += " scale:" + scale;
             chgFontSize(scale);
@@ -1300,11 +1306,20 @@
         }
     </script>
     <script>
+        function updateSutraTitle() {
+            var d = document.getElementById("id_sutra");
+            //var path = g_lectLst[0].path;
+            //n = path.indexOf('/');
+            //d.innerText = path.substr(0,n);
+            d.innerText = document.getElementById("root_0_span").innerText;
+        }
+    </script>
+    <script>
         //mainx1() - part x1
         document.getElementById("id_gotoTopBtn").style.display = "none";
         window.onscroll = onScroll;
         document.getElementById("id_content").onscroll = onscroll;
-
+        
         //mainx2() - part x2
         var g_ratio = window.devicePixelRatio || 1;
         //document.getElementById("log").innerText = "ration:" + ratio;
@@ -1315,6 +1330,9 @@
         adjCssStyle(g_isAndroid);
 
         render1(g_lectLst); //render tree
+
+        updateSutraTitle();
+
         adjFont(g_ratio);
         ctrlsResize();
 
