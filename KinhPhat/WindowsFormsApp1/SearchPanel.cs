@@ -32,7 +32,7 @@ namespace WindowsFormsApp1
 #endif
         StatusBar m_sts;
         public Button m_acceptBtn;
-        public SearchPanel(string cnnStr)
+        public SearchPanel(string cnnStr, bool bldSrchDb = false)
         {
             this.cnnStr = cnnStr;
 
@@ -46,10 +46,20 @@ namespace WindowsFormsApp1
             btn.Text = "Search";
             btn.AutoSize = true;
             btn.Anchor = AnchorStyles.Right;
-            btn.Click += (s, e) =>
+            if (!bldSrchDb)
             {
-                OnSearch(edt.Text);
-            };
+                btn.Click += (s, e) =>
+                {
+                    OnSearch(edt.Text);
+                };
+            }
+            else
+            {
+                btn.Click += (s, e) =>
+                {
+                    BuildSearchDb();
+                };
+            }
             m_acceptBtn = btn;
 
 #if use_browser
@@ -106,14 +116,20 @@ namespace WindowsFormsApp1
 
         }
 
+        private void BuildSearchDb()
+        {
+            var srch = new SearchContent(cnnStr);
+            srch.BuildSearchDb();
+            srch.Close();
+            return;
+        }
+
         private void OnSearch(string txt)
         {
             if (txt == "") return;
 
             var begin = Environment.TickCount;
             var srch = new SearchContent(cnnStr);
-            //srch.BuildSearchDb();
-            //return;
             var res = srch.Find(txt);
             showSearchRes(res);
             m_sts.Text = string.Format("elapsed time: {0}(ms)", Environment.TickCount - begin);
@@ -187,7 +203,7 @@ namespace WindowsFormsApp1
                             n = offset - cur;
                             if (n > 0)
                             {
-                                n = adjBegin(txt, offset, Math.Min(n,50));
+                                n = adjBegin(txt, offset, Math.Min(n, 50));
                             }
 
                             mt.txtLst.Add(new MarkedTxt()

@@ -20,7 +20,7 @@ namespace test_search
         public Form1()
         {
             InitializeComponent();
-            m_srchPanel = new SearchPanel(cnnStr);
+            m_srchPanel = new SearchPanel(cnnStr, false);
             m_srchPanel.OnSelectTitle += (s, e) =>
             {
                 Debug.WriteLine("titleId {0}", e);
@@ -33,7 +33,7 @@ namespace test_search
         {
             get
             {
-                string srcDb = @"D:\tmp\github\utilities\KinhPhat\tieubo.accdb";
+                string srcDb = @"D:\tmp\github\utilities\KinhPhat\truongbo.accdb";
                 var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
                 return cnnStr.Replace("<db>", srcDb);
             }
