@@ -123,6 +123,9 @@
                 <td>
                     <button id="fontAdjBtn" class="fontBtn" onclick="onAdjFont()">〇</button>
                 </td>
+                <td>
+                    <button id="printAll" class="fontBtn" onclick="printAll()">&#9113</button>
+                </td>
             </tr>
         </table>
     </div>
@@ -1355,6 +1358,78 @@
             //d.innerText = path.substr(0,n);
             d.innerText = document.getElementById("root_0_span").innerText;
         }
+    </script>
+    <script>
+        function renderAllTites() {
+            renderTitles(g_lectLst, document.getElementById("id_content"));
+        }
+        function renderTitles(titles, parent) {
+            for (var t in titles) {
+                var d = parent.appendChild(document.createElement('div'));
+                    d.style.pageBreakAfter = 'always';
+                var pars = titles[t].paragraphs;
+                var h3 = d.appendChild(document.createElement('h3'));
+                h3.innerText = pars[0].content;
+                h3.style.textAlign = 'center';
+                for (var i = 1; i < pars.length;i++) {
+                    var par = pars[i];
+                    var el = document.createElement("p");
+                    if (par.alignment == 1) {
+                        el.style.textAlign = 'center';
+                    }
+                    if (par.fontBold == -1) {
+                        el.style.fontWeight = 'bold';
+                    }
+                    if (par.fontItalic == -1) {
+                        el.style.fontStyle = 'italic';
+                    }
+                    el.style.paddingLeft = par.leftIndent;
+                    el.innerText = par.content.replace(/\u000b/g, '\r');
+                    d.appendChild(el);
+                }
+            }
+        }
+        function printAll() {
+            var answer = window.confirm("print for mobie")
+            if (answer) {
+                ration = 3;
+            }
+            else {
+                ration = 1;
+            }
+            var a = window.open('', '', 'height=500, width=500');
+            a.document.write('<style>@page {size: auto;  margin: 0mm; }</style>');
+            a.document.close();
+
+            var d = a.document.body.appendChild(a.document.createElement('div'));
+            var css = getComputedStyle(document.getElementById("root_0_span"), null);
+            var s = css.getPropertyValue('font-size');
+            d.style.fontSize = parseFloat(s) * ration;
+            d.style.padding = 30;
+
+            var h1 = d.appendChild(a.document.createElement('h1'));
+            h1.style.textAlign = 'center';
+            var t1 = document.getElementById("id_sutraTitle").innerText;
+            h1.innerText = t1;
+
+            var node;
+            for (var k in g_nodesDict) {
+                var node = g_nodesDict[k];
+                if (Object.keys(node.childs).length > 1) { break; }
+            }
+            var t2 = node.name;
+            if (t2 != t1) {
+                var h2 = d.appendChild(a.document.createElement('h2'));
+                h2.innerText = t2;
+                h2.style.textAlign = 'center';
+            }
+            
+            renderTitles(g_lectLst, d);
+            //a.oncancel = function () { alert('cancel')};
+            //a.onafterprint = function () { alert('after print') };
+            a.print();
+            a.close();
+        } 
     </script>
     <script>
         //mainx1() - part x1
