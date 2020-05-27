@@ -13,8 +13,9 @@
             background-color: transparent;
             border: none;
             font-family: 'Arial Unicode MS';
-            transform:scale(1.5,1.5);
+            transform: scale(1.5,1.5);
         }
+
         button.miImgBtn {
             display: table-cell;
             padding: 0;
@@ -25,7 +26,7 @@
             background-color: transparent;
             border: none;
             font-family: 'Arial Unicode MS';
-            transform:scale(1.5,1.5);
+            transform: scale(1.5,1.5);
         }
 
         span.miLabel:hover {
@@ -52,44 +53,48 @@
     </style>
     <style>
         div.topCtrls {
-            position:fixed;
-            top:5px;
+            position: fixed;
+            top: 5px;
             padding: 5px;
             background-color: #808080;
             width: 100%;
         }
+
         div.menu {
-            position:fixed;
-            top:50px;
+            position: fixed;
+            top: 50px;
             width: 400px;
-            height:100%;
-            overflow:scroll;
+            height: 100%;
+            overflow: scroll;
             background-color: rgb(209, 209, 209);
             display: table-cell;
         }
 
         div.content {
-            position:fixed;
-            top:50px;
+            position: fixed;
+            top: 50px;
             width: 100%;
-            height:100%;
-            overflow:scroll;
+            height: 100%;
+            overflow: scroll;
             display: table-cell;
         }
-        table,td {
-            vertical-align:top;
-            border-width:0px;
+
+        table, td {
+            vertical-align: central;
+            border-width: 0px;
             border-collapse: collapse;
         }
+
         button.fontBtn {
-            font-family:'MS Gothic';
+            font-family: 'MS Gothic';
         }
-        button.playBtn{
-            font-family:'MS Gothic';
+
+        button.playBtn {
+            font-family: 'MS Gothic';
         }
     </style>
 </head>
-<body　id="body" style="font-family:'Times New Roman';margin:5px;">
+<body id="body" style="font-family: 'Times New Roman'; margin: 5px;">
     <div id="id_content" class="content">
         <p style="text-align: center">sentence</p>
         <p>sentence</p>
@@ -98,15 +103,15 @@
         <p>sentence</p>
         <p>sentence</p>
     </div>
-    <button id ="id_gotoTopBtn" onclick="gotoTop()" style ="position:fixed;right:2px;bottom:2px">△</button>
-    <div id="id_topCtrls" class="topCtrls" >
-        <table style="width:100%;border-width:0px;border-collapse: collapse">
+    <button id="id_gotoTopBtn" onclick="gotoTop()" class="fontBtn" style="position: fixed; right: 2px; bottom: 2px">△</button>
+    <div id="id_topCtrls" class="topCtrls">
+        <table style="width: 100%; border-width: 0px; border-collapse: collapse">
             <tr>
                 <td style="width: auto">
-                    <button style="width: auto" id="showHideMenuBtn" onclick="menuShowHide()">目</button>
+                    <button id="id_toggleMenuBtn" class="fontBtn" style="width: auto" onclick="menuShowHide()">目</button>
                 </td>
                 <td>
-                    <span id="span1" style="white-space:nowrap">Kinh Trường Bộ</span>
+                    <span id="id_sutraTitle" style="white-space: nowrap; font-weight: bold">Kinh Tiểu Bộ</span>
                 </td>
                 <td style="width: 100%"></td>
                 <td>
@@ -118,18 +123,21 @@
                 <td>
                     <button id="fontAdjBtn" class="fontBtn" onclick="onAdjFont()">〇</button>
                 </td>
+                <td>
+                    <button id="printAll" class="fontBtn" onclick="printAll()">&#9113</button>
+                </td>
             </tr>
         </table>
     </div>
-    <div id="id_botCtrls" style="position:fixed;bottom:10px;right:10px">
-        <span style="white-space:nowrap">
+    <div id="id_botCtrls" style="position: fixed; bottom: 10px; right: 10px">
+        <span style="white-space: nowrap">
             <button class="playBtn" id="id_playContent" onclick="onPlayContent()">⏯️</button>
             <button class="playBtn" id="id_stopSpeek" onclick="onStopSpeek()">⏹️</button>
             <button class="playBtn" id="id_prevTitle" onclick="onPrevTitle()">⏮</button>
             <button class="playBtn" id="id_backward" onclick="onBackward()">⏪</button>
             <button class="playBtn" id="id_fastForward" onclick="onFastForward()">⏩</button>
             <button class="playBtn" id="id_nextTitle" onclick="onNextTitle()">⏭</button>
-            <span id="id_playContentSts" style="font-family:'MS Gothic'">stoped&nbsp;</span>
+            <span id="id_playContentSts" style="font-family: 'MS Gothic'">stoped&nbsp;</span>
         </span>
     </div>
     <div id="id_menu" class="menu">
@@ -1082,7 +1090,7 @@
             cont.style.height = h;
             //bot ctrls
             var botctrls = document.getElementById("id_botCtrls");
-            botctrls.style.right = r+10;
+            botctrls.style.right = r + 10;
             botctrls.style.bottom = b;
             //goto top btn
             var gtbtn = document.getElementById("id_gotoTopBtn")
@@ -1106,9 +1114,16 @@
             adjFont(g_ratio);
         }
         function adjFont(ratio) {
-            var el = document.getElementById("span1");
+            var el = document.getElementById("id_sutraTitle");
             var w = el.offsetWidth;
-            var baseW = 106;
+            var key = el.innerText;
+            var d = {
+                "Kinh Tiểu Bộ": [78, 92, 98],   //normal, bold, larger
+                "Tiểu Bộ Kinh": [78, 92, 98],
+                "Kinh Trường Bộ": [106, 113, 120],
+                "Trường Bộ Kinh Digha Nikaya": [200, 221, 225],
+            };
+            var baseW = (d[key] != null) ? d[key][1] : w;
             var scale = baseW * 1000 / w * ratio;
             //document.getElementById("log").innerText += " scale:" + scale;
             chgFontSize(scale);
@@ -1126,10 +1141,18 @@
         }
 
         function chgFontSize(scale) {
-            for (var i in document.childNodes) {
-                var child = document.childNodes[i];
-                chgFontSizeR(child, scale);
-            }
+            //for (var i in document.childNodes) {
+            //    var child = document.childNodes[i];
+            //    chgFontSizeR(child, scale);
+            //}
+            chgFontSize2("button.miImgBtn", scale);
+            chgFontSize2("button.miStsBtn", scale);
+            chgFontSize2("button.fontBtn", scale);
+            chgFontSize2("button.playBtn", scale);
+            chgFontSize2("span.miLabel", scale);
+            chgElementFontSize(document.body, scale);     //effect to all [span, p]
+            //chgElementFontSize(document.getElementById("id_toggleMenuBtn"), scale);
+            chgElementFontSize(document.getElementById("id_sutraTitle"), scale);
         }
         function chgFontSizeR(el, scale) {
             for (var i in el.childNodes) {
@@ -1159,6 +1182,34 @@
             var ratio_width_height = ' r:' + ratio + ' rwh:' + rw + 'x' + rh;
             var data_string = width_height + client_width_height + ratio_width_height + touch_status;
             return data_string;
+        }
+        function chgFontSize2(className, scale) {
+            var i = className.indexOf('.');
+            var elClass = i == -1 ? className : className.substr(i + 1);
+            var el = document.getElementsByClassName(elClass);
+            var css = getComputedStyle(el[0], null);
+            var style = css.getPropertyValue("font-size");
+            var size = parseFloat(style) * scale / 1000;
+            //el.style.fontSize = size + 'px';
+            var rule = getStyleRule(className);
+            rule.style['font-size'] = size + 'px';
+        }
+        function chgElementFontSize(el, scale) {
+            var css = getComputedStyle(el, null);
+            var style = css.getPropertyValue("font-size");
+            var size = parseFloat(style) * scale / 1000;
+            el.style.fontSize = size + 'px';
+        }
+        function chgTblFontSize(scale) {
+            var els = document.getElementsByTagName("table");
+            for (var i in els) {
+                var el = els[i];
+                var css = getComputedStyle(el, null);
+                if (css == null) continue;
+                var style = css.getPropertyValue("font-size");
+                var size = parseFloat(style) * scale / 1000;
+                el.style.fontSize = size + 'px';
+            }
         }
     </script>
     <script>
@@ -1247,7 +1298,7 @@
             var dt = new Date();
             dt.setDate(dt.getDate() + 7);
             document.cookie = txt;
-            document.cookie = "expires="+dt.toUTCString();
+            document.cookie = "expires=" + dt.toUTCString();
         }
         function lstRemove(a, id) {
             for (var i in a) {
@@ -1268,13 +1319,13 @@
                     if (rule.selectorText == unique_title) {
                         return rule;
                     }
-                }                
+                }
             }
         }
         function adjCssStyle(isAndroid) {
             if (isAndroid) {
                 var rule = getStyleRule("button.miStsBtn");
-                rule.style['margin-top']='-5px';
+                rule.style['margin-top'] = '-5px';
                 rule.style['font-family'] = 'Cambria Math';
                 rule.style['transform'] = 'scale(1.5, 1.5)';
 
@@ -1284,7 +1335,7 @@
                 r2.style['transform'] = 'scale(1, 1)';
 
                 var r3 = getStyleRule("button.playBtn");
-                r3.style['transform']= 'scale(1.4, 1.4)';
+                r3.style['transform'] = 'scale(1.4, 1.4)';
                 r3.style['margin-right'] = '10px';
                 r3.style['margin-left'] = '10px';
 
@@ -1298,6 +1349,93 @@
                 };
             }
         }
+    </script>
+    <script>
+        function updateSutraTitle() {
+            var d = document.getElementById("id_sutraTitle");
+            //var path = g_lectLst[0].path;
+            //n = path.indexOf('/');
+            //d.innerText = path.substr(0,n);
+            d.innerText = document.getElementById("root_0_span").innerText;
+        }
+    </script>
+    <script>
+        function renderAllTites() {
+            renderTitles(g_lectLst, document.getElementById("id_content"));
+        }
+        function renderTitles(titles, parent) {
+            for (var t in titles) {
+                var d = parent.appendChild(document.createElement('div'));
+                    d.style.pageBreakAfter = 'always';
+                var pars = titles[t].paragraphs;
+                var h3 = d.appendChild(document.createElement('h3'));
+                h3.innerText = pars[0].content;
+                h3.style.textAlign = 'center';
+                for (var i = 1; i < pars.length;i++) {
+                    var par = pars[i];
+                    var el = document.createElement("p");
+                    if (par.alignment == 1) {
+                        el.style.textAlign = 'center';
+                    }
+                    if (par.fontBold == -1) {
+                        el.style.fontWeight = 'bold';
+                    }
+                    if (par.fontItalic == -1) {
+                        el.style.fontStyle = 'italic';
+                    }
+                    el.style.paddingLeft = par.leftIndent;
+                    el.innerText = par.content.replace(/\u000b/g, '\r');
+                    d.appendChild(el);
+                }
+            }
+        }
+        function printAll() {
+            var answer = window.confirm("print for mobie")
+            if (answer) {
+                ration = 3;
+            }
+            else {
+                ration = 1;
+            }
+
+            var a = window.open('', '', 'height=500, width=500');
+            a.document.write('<style>@page {size: auto;  margin: 0mm; }</style>');
+            a.document.close();
+            var span0 = document.getElementById("root_0_span");
+            var t1 = span0.innerText;
+            a.document.title = t1;
+
+            var d = a.document.body.appendChild(a.document.createElement('div'));
+            var css = getComputedStyle(span0, null);
+            var s = css.getPropertyValue('font-size');
+            d.style.fontSize = parseFloat(s) * ration;
+            d.style.padding = 30;
+
+            var h1 = d.appendChild(a.document.createElement('h1'));
+            h1.style.textAlign = 'center';
+            h1.innerText = t1;
+
+            var arr = [];
+            for (var k in g_nodesDict) {
+                var node = g_nodesDict[k];
+                arr.push(node.name);
+                if (Object.keys(node.childs).length > 1) { break; }
+            }
+            arr.shift();
+            if (arr.length > 0) {
+                var t2 = arr.join('\r');
+                var h2 = d.appendChild(a.document.createElement('h2'));
+                h2.innerText = t2;
+                h2.style.textAlign = 'center';
+                a.document.title = t2;
+            }
+            
+            renderTitles(g_lectLst, d);
+            //a.oncancel = function () { alert('cancel')};
+            //a.onafterprint = function () { alert('after print') };
+            a.print();
+            a.close();
+        } 
     </script>
     <script>
         //mainx1() - part x1
@@ -1315,6 +1453,9 @@
         adjCssStyle(g_isAndroid);
 
         render1(g_lectLst); //render tree
+
+        updateSutraTitle();
+
         adjFont(g_ratio);
         ctrlsResize();
 

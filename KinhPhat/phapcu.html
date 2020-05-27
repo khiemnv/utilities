@@ -1397,31 +1397,37 @@
             else {
                 ration = 1;
             }
+
             var a = window.open('', '', 'height=500, width=500');
             a.document.write('<style>@page {size: auto;  margin: 0mm; }</style>');
             a.document.close();
+            var span0 = document.getElementById("root_0_span");
+            var t1 = span0.innerText;
+            a.document.title = t1;
 
             var d = a.document.body.appendChild(a.document.createElement('div'));
-            var css = getComputedStyle(document.getElementById("root_0_span"), null);
+            var css = getComputedStyle(span0, null);
             var s = css.getPropertyValue('font-size');
             d.style.fontSize = parseFloat(s) * ration;
             d.style.padding = 30;
 
             var h1 = d.appendChild(a.document.createElement('h1'));
             h1.style.textAlign = 'center';
-            var t1 = document.getElementById("id_sutraTitle").innerText;
             h1.innerText = t1;
 
-            var node;
+            var arr = [];
             for (var k in g_nodesDict) {
                 var node = g_nodesDict[k];
+                arr.push(node.name);
                 if (Object.keys(node.childs).length > 1) { break; }
             }
-            var t2 = node.name;
-            if (t2 != t1) {
+            arr.shift();
+            if (arr.length > 0) {
+                var t2 = arr.join('\r');
                 var h2 = d.appendChild(a.document.createElement('h2'));
                 h2.innerText = t2;
                 h2.style.textAlign = 'center';
+                a.document.title = t2;
             }
             
             renderTitles(g_lectLst, d);
