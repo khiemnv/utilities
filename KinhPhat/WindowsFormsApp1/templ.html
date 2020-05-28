@@ -1430,6 +1430,7 @@
             for (var k in g_nodesDict) {
                 var node = g_nodesDict[k];
                 arr.push(node.name);
+                if (node.childs == null) { arr = arr.slice(0, 1); break;}
                 if (Object.keys(node.childs).length > 1) { break; }
             }
             t1 = arr.join('\r');
@@ -1440,7 +1441,7 @@
             //a.oncancel = function () { alert('cancel')};
             //a.onafterprint = function () { alert('after print') };
             a.print();
-            a.close();
+            a.close();	//ok on chrome
         } 
     </script>
     <script>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -61,6 +62,16 @@ namespace WindowsFormsApp1
         public CnnInfo m_cnnInfo;
         [DataMember(Name = "curSts")]
         public CurrentState m_curSts;
+        [DataMember(Name = "wndSize")]
+        public Size m_wndSize;
+        [DataMember(Name = "wndPos")]
+        public Point m_wndPos;
+        [DataMember(Name = "srchWndSize")]
+        public Size m_srchWndSize;
+        [DataMember(Name = "srchWndPos")]
+        public Point m_srchWndPos;
+
+
         public lContentProvider m_content;
 
         static ConfigMng m_instance;

@@ -862,6 +862,8 @@ namespace WindowsFormsApp1
             var paragraphLst = new List<MyParagraph>();
             foreach (DataRow row in dt.Rows)
             {
+                if (row.RowState == DataRowState.Deleted) continue;
+
                 var par = new MyParagraph
                 {
                     titleId = Convert.ToUInt64(row["titleId"]),

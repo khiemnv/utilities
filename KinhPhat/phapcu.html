@@ -1363,11 +1363,22 @@
         function renderAllTites() {
             renderTitles(g_lectLst, document.getElementById("id_content"));
         }
-        function renderTitles(titles, parent) {
-            for (var t in titles) {
+        function renderTitles(titles, parent, len) {
+            var prevt2 = "";
+            for (var ti in titles) {
+                var t = titles[ti];
+                var end = t.path.length - t.title.length;
+                var t2 = t.path.slice(len + 1, end - 1);
+                if (t2 != prevt2) {
+                    var h2 = parent.appendChild(document.createElement('h2'));
+                    h2.style.textAlign = 'center';
+                    h2.innerText = t2.replace('/', '\r');
+                    prevt2 = t2;
+                }
+
                 var d = parent.appendChild(document.createElement('div'));
                     d.style.pageBreakAfter = 'always';
-                var pars = titles[t].paragraphs;
+                var pars = t.paragraphs;
                 var h3 = d.appendChild(document.createElement('h3'));
                 h3.innerText = pars[0].content;
                 h3.style.textAlign = 'center';
@@ -1421,16 +1432,11 @@
                 arr.push(node.name);
                 if (Object.keys(node.childs).length > 1) { break; }
             }
-            arr.shift();
-            if (arr.length > 0) {
-                var t2 = arr.join('\r');
-                var h2 = d.appendChild(a.document.createElement('h2'));
-                h2.innerText = t2;
-                h2.style.textAlign = 'center';
-                a.document.title = t2;
-            }
+            t1 = arr.join('\r');
+            a.document.title = t1;
+            h1.innerText = t1;
             
-            renderTitles(g_lectLst, d);
+            renderTitles(g_lectLst, d, t1.length);
             //a.oncancel = function () { alert('cancel')};
             //a.onafterprint = function () { alert('after print') };
             a.print();

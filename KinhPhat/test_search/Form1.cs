@@ -33,7 +33,7 @@ namespace test_search
         {
             get
             {
-                string srcDb = @"D:\tmp\github\utilities\KinhPhat\truongbo.accdb";
+                string srcDb = @"..\..\..\truongbo.accdb";
                 var cnnStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=<db>;";
                 return cnnStr.Replace("<db>", srcDb);
             }

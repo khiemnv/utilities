@@ -380,6 +380,8 @@ namespace WindowsFormsApp1
             var tDict = new Dictionary<string, UInt64>();
             foreach (Match m in mc)
             {
+                if (tDict.ContainsKey(m.Value)){continue;}
+
                 cmd.Parameters[0].Value = m.Value;
                 var res = cmd.ExecuteScalar();
                 if (res != null)
@@ -502,7 +504,7 @@ namespace WindowsFormsApp1
 
                 var h = new MyHeap<int[]>(tmplRes.ToArray(), (x, y) => x[2] - y[2]);
                 var n = Math.Min(100, tmplRes.Count);
-                var top100 = new SrchRec[100];
+                var top100 = new SrchRec[n];
                 for (int i = 0; i < n; i++)
                 {
                     var t = h.PopMin();

@@ -51,7 +51,7 @@ namespace WindowsFormsApp1
             var file = menu.MenuItems.Add("&File");
             file.MenuItems.Add("&Open").Click += (s, e) => { OnOpenDb(s, e); };
             file.MenuItems.Add("&Preview").Click += (s, e) => { PreviewTitle(s, e); };
-            file.MenuItems.Add("&Export").Click += (s, e) => {ExportSelected(s, e); };
+            file.MenuItems.Add("&Export").Click += (s, e) => { ExportSelected(s, e); };
             file.MenuItems.Add("&Find").Click += (s, e) => { OpenFindWnd(); };
             this.Menu = menu;
 
@@ -122,9 +122,24 @@ namespace WindowsFormsApp1
             dlg.Icon = new Icon(@"..\..\..\Search.ico");
             var srchPanel = new SearchPanel(ConfigMng.getInstance().m_cnnInfo.cnnStr);
             dlg.Controls.Add(srchPanel.m_tblLayout);
-            srchPanel.OnSelectTitle += (s, e) => {
+            srchPanel.OnSelectTitle += (s, e) =>
+            {
                 var title = m_titles.Find((x) => { return x.ID == e; });
                 DisplayTitle2(title);
+            };
+
+            dlg.AcceptButton = srchPanel.m_acceptBtn;
+
+            var cfg = ConfigMng.getInstance();
+            if (cfg.m_srchWndSize.Width > 0)
+            {
+                dlg.Location = cfg.m_srchWndPos;
+                dlg.Size = cfg.m_srchWndSize;
+            }
+            dlg.FormClosed += (s, e) =>
+            {
+                cfg.m_srchWndPos = dlg.Location;
+                cfg.m_srchWndSize = (dlg.WindowState == FormWindowState.Normal) ? dlg.Size : dlg.RestoreBounds.Size;
             };
             dlg.Show();
         }
@@ -142,7 +157,7 @@ namespace WindowsFormsApp1
                 ss.SelectVoice(vn.VoiceInfo.Name);
                 m_ss = ss;
             }
-            foreach(MyParagraph p in title.paragraphLst)
+            foreach (MyParagraph p in title.paragraphLst)
             {
                 m_ss.SpeakAsync(p.content);
             }
@@ -190,7 +205,13 @@ namespace WindowsFormsApp1
 
                 //restore state
                 restoreSts();
-              
+
+                if (cfg.m_wndSize.Width > 0)
+                {
+                    this.Location = cfg.m_wndPos;
+                    this.Size = cfg.m_wndSize;
+                }
+
                 //set form title
                 UpdateFormName();
             }
@@ -199,12 +220,12 @@ namespace WindowsFormsApp1
 
         void UpdateFormName()
         {
-            foreach(var title in m_titles)
+            foreach (var title in m_titles)
             {
                 var path = title.zPath;
                 var n = path.IndexOf('/');
                 if (n == -1) break;
-                this.Text = path.Substring(0,n);
+                this.Text = path.Substring(0, n);
                 break;
             }
         }
@@ -216,7 +237,8 @@ namespace WindowsFormsApp1
         void restoreSts()
         {
             var sts = ConfigMng.getInstance().m_curSts;
-            foreach (string path in sts.selectedTitles) {
+            foreach (string path in sts.selectedTitles)
+            {
                 var node = GetTreeNode(path);
                 Check(node, true);
             }
@@ -266,10 +288,13 @@ namespace WindowsFormsApp1
                     }
                 }
             }
-            ConfigMng.getInstance().m_curSts.selectedTitles = selected;
-            ConfigMng.getInstance().m_curSts.expandedNodes = expanded;
-            ConfigMng.getInstance().m_curSts.readingTitle = m_curTitle;
-            ConfigMng.getInstance().SaveConfig();
+            var cfg = ConfigMng.getInstance();
+            cfg.m_curSts.selectedTitles = selected;
+            cfg.m_curSts.expandedNodes = expanded;
+            cfg.m_curSts.readingTitle = m_curTitle;
+            cfg.m_wndPos = this.Location;
+            cfg.m_wndSize = (this.WindowState == FormWindowState.Normal) ? this.Size : this.RestoreBounds.Size;
+            cfg.SaveConfig();
         }
 
         EditPanel m_edtPanel;
@@ -334,7 +359,8 @@ namespace WindowsFormsApp1
         private void BeginEditTitle(MyTitle title)
         {
             //edit
-            m_edtPanel.m_title = new MyTitle() {
+            m_edtPanel.m_title = new MyTitle()
+            {
                 ID = title.ID,
                 zPath = title.zPath,
                 zTitle = title.zTitle
@@ -529,7 +555,7 @@ namespace WindowsFormsApp1
         {
             foreach (var title in titles)
             {
-                var tNode = addRow('T', title.paragraphLst == null?0:(UInt64)title.paragraphLst.Count,
+                var tNode = addRow('T', title.paragraphLst == null ? 0 : (UInt64)title.paragraphLst.Count,
                     title.zPath, title.zTitle);
                 tNode.title = title;
             }
@@ -596,7 +622,7 @@ namespace WindowsFormsApp1
         TreeNode CreateTreeNode(Node node, TreeNode newNode = null)
         {
             //if (node.type != 'T') { node.size = (UInt64)node.childs.Count; }
-            string name = node.size ==0 ? node.name :
+            string name = node.size == 0 ? node.name :
                 string.Format("{0} ({1})", node.name, node.size);
             if (newNode == null) newNode = new TreeNode(name);
             else newNode.Name = name;
@@ -920,7 +946,7 @@ namespace WindowsFormsApp1
                 if (i.Nodes.Count > 0) { UpdateChilds(i, idx); }
             }
         }
-#endregion
+        #endregion
     }
 
     [DataContract(Name = "MyTitle")]
