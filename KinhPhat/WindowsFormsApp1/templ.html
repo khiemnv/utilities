@@ -111,7 +111,7 @@
                     <button id="id_toggleMenuBtn" class="fontBtn" style="width: auto" onclick="menuShowHide()">目</button>
                 </td>
                 <td>
-                    <span id="id_sutraTitle" style="white-space: nowrap; font-weight: bold">Kinh Tiểu Bộ</span>
+                    <span id="id_sutraTitle" style="white-space: nowrap; font-weight: bold">Ðại Tạng Kinh Việt Nam</span>
                 </td>
                 <td style="width: 100%"></td>
                 <td>
@@ -744,15 +744,17 @@
             tDiv.textContent = "";
             for (var i in pars) {
                 var par = pars[i];
-                var el = document.createElement("p");
+                var el = document.createElement('p');
                 if (par.alignment == 1) {
                     el.style.textAlign = 'center';
+                } else if (par.alignment == 2) {
+                    el.style.textAlign = 'right';
                 }
                 if (par.fontBold == -1) {
-                    el.style.fontWeight = "bold";
+                    el.style.fontWeight = 'bold';
                 }
                 if (par.fontItalic == -1) {
-                    el.style.fontStyle = "italic";
+                    el.style.fontStyle = 'italic';
                 }
                 el.style.paddingLeft = par.leftIndent;
                 el.innerText = par.content.replace(/\u000b/g, '\r');
@@ -1118,10 +1120,7 @@
             var w = el.offsetWidth;
             var key = el.innerText;
             var d = {
-                "Kinh Tiểu Bộ": [78, 92, 98],   //normal, bold, larger
-                "Tiểu Bộ Kinh": [78, 92, 98],
-                "Kinh Trường Bộ": [106, 113, 120],
-                "Trường Bộ Kinh Digha Nikaya": [200, 221, 225],
+                "Ðại Tạng Kinh Việt Nam": [161, 170, 181],   //normal, bold, larger
             };
             var baseW = (d[key] != null) ? d[key][1] : w;
             var scale = baseW * 1000 / w * ratio;
@@ -1384,7 +1383,7 @@
                 h3.style.textAlign = 'center';
                 for (var i = 1; i < pars.length;i++) {
                     var par = pars[i];
-                    var el = document.createElement("p");
+                    var el = document.createElement('p');
                     if (par.alignment == 1) {
                         el.style.textAlign = 'center';
                     }
@@ -1401,13 +1400,8 @@
             }
         }
         function printAll() {
-            var answer = window.confirm("print for mobie")
-            if (answer) {
-                ration = 3;
-            }
-            else {
-                ration = 1;
-            }
+            var answer = window.prompt("print ration (for mobie: 3 / for desktop: 1)", "3");
+            var ratio = parseFloat(answer);
 
             var a = window.open('', '', 'height=500, width=500');
             a.document.write('<style>@page {size: auto;  margin: 0mm; }</style>');
@@ -1419,7 +1413,7 @@
             var d = a.document.body.appendChild(a.document.createElement('div'));
             var css = getComputedStyle(span0, null);
             var s = css.getPropertyValue('font-size');
-            d.style.fontSize = parseFloat(s) * ration;
+            d.style.fontSize = parseFloat(s) * ratio;
             d.style.padding = 30;
 
             var h1 = d.appendChild(a.document.createElement('h1'));
@@ -1461,7 +1455,7 @@
 
         render1(g_lectLst); //render tree
 
-        updateSutraTitle();
+        //updateSutraTitle();
 
         adjFont(g_ratio);
         ctrlsResize();
