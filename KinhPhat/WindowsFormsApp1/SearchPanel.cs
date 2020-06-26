@@ -118,7 +118,7 @@ namespace WindowsFormsApp1
 
         private void BuildSearchDb()
         {
-            var srch = new SearchContent(cnnStr);
+            var srch = new SearchContent(cnnStr, @"D:\tmp\github\utilities\KinhPhat\test.db");
             srch.BuildSearchDb();
             srch.Close();
             return;

@@ -25,7 +25,12 @@ namespace WindowsFormsApp1
             {
                 var reg = new Regex("Data Source=(.*);");
                 var m = reg.Match(cnnStr);
-                m_searchDb = m.Groups[1].Value.Replace(".accdb", "_search.db");
+                srchDb = m.Groups[1].Value.Replace(".accdb", "_search.db");
+            }
+            m_searchDb = srchDb;
+            if (!File.Exists(m_searchDb))
+            {
+                crtSrchDb(m_searchDb);
             }
             m_cnn = new OleDbConnection(m_cnnStr);
             m_cnn.Open();
@@ -51,6 +56,7 @@ namespace WindowsFormsApp1
             //cmd.CommandText = "SELECT * FROM paragraphs WHERE ID > (SELECT MAX(paragraphId) FROM words)";
             //cmd.CommandText = "SELECT * FROM paragraphs WHERE ID > 42207";  //tieu bo last build search data
             //cmd.CommandText = "SELECT * FROM paragraphs WHERE ID > 4749";  //truong bo last build search data
+            //cmd.CommandText = "SELECT * FROM paragraphs WHERE ID > 7723";  //trung bo last build search data
             cmd.CommandText = "";
             var rd = cmd.ExecuteReader();
             var reg = new Regex(@"[\w]+(-\w+)*");
@@ -153,36 +159,41 @@ namespace WindowsFormsApp1
             get
             {
                 if (!File.Exists(m_searchDb)){
-                    SQLiteConnection.CreateFile(m_searchDb);
-                    SQLiteConnection m_dbConnection = new SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
-                    m_dbConnection.Open();
-
-                    string[] sqls = new string[] {
-                        "CREATE TABLE IF NOT EXISTS keys("
-                            + "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            + "key TEXT"
-                            + ");",
-                        "CREATE TABLE IF NOT EXISTS words("
-                            + "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
-                            + "keyId INT,"
-                            + "titleId INT,"
-                            + "paragraphId INT,"
-                            + "pos INT,"
-                            + "word TEXT"
-                            + ");",
-                        "CREATE INDEX IF NOT EXISTS wordsKeyId ON words(keyId);" };
-
-                    foreach (var sql in sqls)
-                    {
-                        SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
-                        command.ExecuteNonQuery();
-                        command.Dispose();
-                    }
-
-                    m_dbConnection.Close();
+                    throw new Exception();
                 }
                 return string.Format(@"Data Source={0};version=3;", m_searchDb);
             }
+        }
+        void crtSrchDb(string path)
+        {
+            SQLiteConnection.CreateFile(path);
+            SQLiteConnection cnn = new SQLiteConnection("Data Source=MyDatabase.sqlite;Version=3;");
+            cnn.Open();
+
+            string[] sqls = new string[] {
+                        "CREATE TABLE IF NOT EXISTS keys("
+                            + " ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+                            + " key TEXT"
+                            + ");",
+                        "CREATE TABLE IF NOT EXISTS words("
+                            + " ID INTEGER PRIMARY KEY AUTOINCREMENT,"
+                            + " keyId INT,"
+                            + " titleId INT,"
+                            + " paragraphId INT,"
+                            + " pos INT,"
+                            + " word TEXT"
+                            + ");",
+                        "CREATE INDEX IF NOT EXISTS wordsKeyId ON words(keyId);" };
+
+            foreach (var sql in sqls)
+            {
+                SQLiteCommand command = new SQLiteCommand(sql, cnn);
+                var n = command.ExecuteNonQuery();
+                command.Dispose();
+            }
+
+            cnn.Close();
+            cnn.Dispose();
         }
 
         void AddToSearchDb(HashSet<string> keysH, List<MyWord> wordsL)
