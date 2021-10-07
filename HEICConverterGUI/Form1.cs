@@ -27,32 +27,39 @@ namespace GUI
         public Form1()
         {
             InitializeComponent();
-#if false
+#if true
             var m_menu = new MenuStrip();
-            this.Controls.Add(m_menu);
             ToolStripMenuItem file = new ToolStripMenuItem("&File");
             m_menu.Items.Add(file);
             ToolStripMenuItem open = new ToolStripMenuItem("&Open");
             file.DropDownItems.Add (open);
-            open.Click += Open_Click;
-            ToolStripMenuItem refresh = new ToolStripMenuItem("&Refresh");
-            m_menu.Items.Add(refresh);
-            refresh.Click += Refresh_Click;
+            ToolStripMenuItem export = new ToolStripMenuItem("&Export");
+            file.DropDownItems.Add(export);
+            //ToolStripMenuItem refresh = new ToolStripMenuItem("&Refresh");
+            //m_menu.Items.Add(refresh);
+            //var refresh = Menu.MenuItems.Add("&Refresh");
 
-#endif
+            var edit = new ToolStripMenuItem("&Edit");
+            m_menu.Items.Add(edit);
+            var rLeft = new ToolStripMenuItem("&Left(90°)");
+            var rRight = new ToolStripMenuItem("&Right(90°)");
+            edit.DropDownItems.AddRange(new ToolStripItem[] { rLeft, rRight });
+#else
             this.Menu = new MainMenu();
             var file = Menu.MenuItems.Add("&File");
             var open = file.MenuItems.Add("&Open");
-            open.Click += Open_Click;
             var export = file.MenuItems.Add("&Export");
-            export.Click += Export_Click;
             //var refresh = Menu.MenuItems.Add("&Refresh");
-            //refresh.Click += Refresh_Click;
 
             var edit = Menu.MenuItems.Add("&Edit");
             var rLeft = edit.MenuItems.Add("&Left(90°)");
-            rLeft.Click += RLeft_Click;
             var rRight = edit.MenuItems.Add("&Right(90°)");
+#endif
+
+            open.Click += Open_Click;
+            export.Click += Export_Click;
+            //refresh.Click += Refresh_Click;
+            rLeft.Click += RLeft_Click;
             rRight.Click += RRight_Click;
 
             m_sc = new SplitContainer();
@@ -91,6 +98,9 @@ namespace GUI
             m_pb = new PictureBox();
             //m_pb.Dock = DockStyle.Fill;
             m_sc.Panel2.Controls.Add(m_pb);
+
+            this.Controls.Add(m_menu);
+
         }
 
         private void RRight_Click(object sender, EventArgs e)
