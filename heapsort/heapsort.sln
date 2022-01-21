@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "heapsort", "heapsort.csproj", "{504FE711-C934-4C62-B271-3371103C12AF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{504FE711-C934-4C62-B271-3371103C12AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{504FE711-C934-4C62-B271-3371103C12AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{504FE711-C934-4C62-B271-3371103C12AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{504FE711-C934-4C62-B271-3371103C12AF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F33915AA-33AE-4508-8566-C5B91AFCDA6C}
+	EndGlobalSection
+EndGlobal

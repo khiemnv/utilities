@@ -248,10 +248,12 @@ namespace GUI
                     m_descr = m_cursor.getStatus();
                     incPrgCallback((int)(curPos / m_scale), i / 10);
                     Thread.Sleep(m_timeOut);
+                    #if print_debug
                     Debug.WriteLine("{0}.m_task cur thread {1} elapsed {2} s",
                         this,
                         Thread.CurrentThread.ManagedThreadId,
                         i / 10);
+                        #endif
                     //status
                     if (curPos == m_endPos)
                     {
@@ -277,7 +279,9 @@ namespace GUI
                 Thread.CurrentThread.ManagedThreadId);
             if (this.m_prg.InvokeRequired)
             {
+                #if print_debug
                 Debug.WriteLine("+ invoked req");
+                #endif
                 //call it self in form thread
                 lCloseDlg d = new lCloseDlg(this.closeDlgCallback);
                 this.Invoke(d);
@@ -295,14 +299,18 @@ namespace GUI
             Debug.WriteLine("{0}.incPrgCallback cur thread {1}", this, Thread.CurrentThread.ManagedThreadId);
             if (this.m_prg.InvokeRequired)
             {
+                #if print_debug
                 Debug.WriteLine("+ invoke req");
+                #endif
                 //call it self in form thread
                 lIncProgress d = new lIncProgress(this.incPrgCallback);
                 this.Invoke(d, new object[] { iStep, elapsed });
             }
             else
             {
+                #if print_debug
                 Debug.WriteLine("+ method body {0} {1}", iStep, elapsed);
+                #endif
                 this.m_prg.Value = iStep;
                 double percent = (double)iStep / m_nStep;
                 m_percentTxt.Text = percent.ToString("0.00%");

@@ -1,5 +1,4 @@
 ﻿#define use_progress_bar
-
 using ImageMagick;
 using System;
 using System.Collections.Generic;
@@ -10,18 +9,15 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
-using System.Threading;
-using OpenCvSharp;
 
-namespace GUI
+namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
-        //protected Menu m_menu;
-        string m_srcDir;
+                string m_srcDir;
         protected TreeView m_tree;
         Dictionary<string, Node> m_nodeDict;
         BackgroundWorker m_bw;
@@ -30,7 +26,12 @@ namespace GUI
         public Form1()
         {
             InitializeComponent();
-#if true
+
+            initCtrl();
+        }
+
+        void initCtrl()
+        {
             var m_menu = new MenuStrip();
             ToolStripMenuItem file = new ToolStripMenuItem("&File");
             m_menu.Items.Add(file);
@@ -38,27 +39,14 @@ namespace GUI
             file.DropDownItems.Add (open);
             ToolStripMenuItem export = new ToolStripMenuItem("&Export");
             file.DropDownItems.Add(export);
-            //ToolStripMenuItem refresh = new ToolStripMenuItem("&Refresh");
-            //m_menu.Items.Add(refresh);
-            //var refresh = Menu.MenuItems.Add("&Refresh");
 
             var edit = new ToolStripMenuItem("&Edit");
             m_menu.Items.Add(edit);
             var rLeft = new ToolStripMenuItem("&Left(90°)");
             var rRight = new ToolStripMenuItem("&Right(90°)");
             edit.DropDownItems.AddRange(new ToolStripItem[] { rLeft, rRight });
-#else
-            this.Menu = new MainMenu();
-            var file = Menu.MenuItems.Add("&File");
-            var open = file.MenuItems.Add("&Open");
-            var export = file.MenuItems.Add("&Export");
-            //var refresh = Menu.MenuItems.Add("&Refresh");
 
-            var edit = Menu.MenuItems.Add("&Edit");
-            var rLeft = edit.MenuItems.Add("&Left(90°)");
-            var rRight = edit.MenuItems.Add("&Right(90°)");
-#endif
-
+            
             open.Click += Open_Click;
             export.Click += Export_Click;
             //refresh.Click += Refresh_Click;
@@ -92,7 +80,8 @@ namespace GUI
             m_bw.WorkerReportsProgress = true;
 
             m_sc.Visible = true;
-#if use_progress_bar
+
+            #if use_progress_bar
             progressBar.Visible = false;
             progressBar.Dock = DockStyle.Bottom;
             Controls.Add(progressBar);
@@ -103,7 +92,12 @@ namespace GUI
             m_sc.Panel2.Controls.Add(m_pb);
 
             this.Controls.Add(m_menu);
+        }
 
+                private void Tree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            //throw new NotImplementedException();
+            OnNodeMouseClick(sender, e);
         }
 
         private void RRight_Click(object sender, EventArgs e)
@@ -119,8 +113,7 @@ namespace GUI
             m_curImg.Rotate(270);
             DisplayCurImagine();
         }
-
-        private void M_bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+                private void M_bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
 #if use_progress_bar
             progressBar.Visible = false;
@@ -184,7 +177,25 @@ namespace GUI
             Thread.Sleep(100);
 #endif
         }
+                void exportToJpg(string srcFile, string newFile)
+        {
+            //Thread.Sleep(1000);
+            //return;
+            try
+            {
+                if (File.Exists(newFile))
+                {
+                    return;
+                }
 
+                MagickImage image = new MagickImage(srcFile);
+                image.Write(newFile);
+            }catch(Exception e)
+            {
+                Debug.WriteLine("error {0}",srcFile);
+                Debug.WriteLine(e.Message);
+            }
+        }
         private void Export_Click(object sender, EventArgs e)
         {
             //get selected item
@@ -224,51 +235,6 @@ namespace GUI
                 MessageBox.Show("No file seleted!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        void exportToJpg(string srcFile, string newFile)
-        {
-            //Thread.Sleep(1000);
-            //return;
-            try
-            {
-                if (File.Exists(newFile))
-                {
-                    return;
-                }
-
-                MagickImage image = new MagickImage(srcFile);
-                image.Write(newFile);
-            }catch(Exception e)
-            {
-                Debug.WriteLine("error {0}",srcFile);
-                Debug.WriteLine(e.Message);
-            }
-        }
-
-        ProgressDlg m_progressDlg;
-        class cursor : ICursor
-        {
-            long m_pos;
-            string m_status = "";
-            public long getPos()
-            {
-                return m_pos;
-            }
-
-            public string getStatus()
-            {
-                return m_status;
-            }
-
-            public void setPos(long pos)
-            {
-                m_pos = pos;
-            }
-
-            public void setStatus(string msg)
-            {
-                m_status = msg;
-            }
-        }
         void exportToJpg(string des, List<string> selected, string src)
         {
 #if use_progress_bar
@@ -284,42 +250,9 @@ namespace GUI
             m_progressDlg.ShowDialog();
             #endif
         }
-        private void Refresh_Click(object sender, EventArgs e)
-        {
-            renderTree(m_nodeDict.Values.ElementAt(0));
-        }
-
         private void Open_Click(object sender, EventArgs e)
         {
-#if false
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "heic files (*.heic)|*.heic";
-            ofd.Multiselect = true;
-            var ret = ofd.ShowDialog();
-            if (ret == DialogResult.OK)
-            {
-                foreach (string file in ofd.FileNames)
-                {
-                    //
-                    addRow('F', 0, file);
-                }
-            }
-#endif
-#if false
-            var dialog = new CommonOpenFileDialog();
-            dialog.IsFolderPicker = true;
-            dialog.Multiselect = true;
-            CommonFileDialogResult result = dialog.ShowDialog();
-            if (result == CommonFileDialogResult.Ok)
-            {
-                foreach(string path in dialog.FileNames)
-                {
-
-                }
-            }
-#endif
-#if true
-            var fbd = new FolderBrowserDialog();
+                        var fbd = new FolderBrowserDialog();
             var ret = fbd.ShowDialog();
             if (ret == DialogResult.OK)
             {
@@ -328,9 +261,8 @@ namespace GUI
                 UInt64 size = addFolder(m_srcDir);
                 renderTree(m_nodeDict.Values.ElementAt(0));
             }
-#endif
         }
-
+        
         UInt64 addFolder(string path)
         {
             UInt64 size = 0;
@@ -355,79 +287,16 @@ namespace GUI
             }
             return size;
         }
-
-        DataTable GetData()
+        public class Node
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("type", typeof(char));
-            dt.Columns.Add("size", typeof(UInt64));
-            dt.Columns.Add("name", typeof(string));
-
-            System.IO.StreamReader rd = System.IO.File.OpenText(@"C:\tmp\log2.txt");
-
-            string[] txt = {
-                @"F 2415 D:\.Trash-1000\files\backupsettings.conf",
-                @"F 28018176 D:\.Trash - 1000\files\BHome3388.exe",
-                @"F 53082 D:\.Trash - 1000\files\brse.odt",
-                @"F 16645 D:\.Trash - 1000\files\KhiemNV - CV - 20140429.docx",
-                @"F 108886 D:\.Trash - 1000\files\KhiemNV.CV.pdf",
-                @"D 0 D:\.Trash - 1000\files\linux",
-            };
-
-            txt = File.ReadAllLines(@"C:\tmp\log2.txt");
-
-            //foreach (string line in txt)
-            //for(; ; )
-            //{
-            //    string line = rd.ReadLine();
-            //    if (rd.EndOfStream) break;
-            for (int j = 0; j < txt.Length - 1; j++)
-            {
-                string line = txt[j];
-
-                UInt64 size = 0;
-                int i;
-                for (i = 2; i < line.Length; i++)
-                {
-                    if (line[i] == ' ') { i++; break; }
-                    size = (size * 10) + line[i] - '0';
-                }
-                dt.Rows.Add(new object[] { line[0], size, line.Substring(i) });
-            }
-
-            //rd.Close();
-            return dt;
+            public string id;
+            public char type;
+            public UInt64 size;
+            public string name;
+            public List<Node> childs = new List<Node>();
         }
 
-        private void InitCtrls()
-        {
-            BuildTree();
-        }
-        private void Tree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
-        {
-            //throw new NotImplementedException();
-            OnNodeMouseClick(sender, e);
-        }
-
-        MagickImage m_curImg;
-        void DisplayImagine(string path)
-        {
-            Mat src = new Mat(path,ImreadModes.Color);
-            var bitMap = src.SaveImage(@"C:\temp\conv\test.png");
-            return ;
-            //try
-            //{
-            //    MagickImage img = new MagickImage(path);
-            //    m_curImg = img;
-            //    img.Format = MagickFormat.Bmp;
-            //    //img.Rotate(90);
-            //    DisplayCurImagine();
-            //}catch(Exception e)
-            //{
-            //    Debug.WriteLine(e.Message);
-            //}
-        }
-        void DisplayCurImagine()
+                void DisplayCurImagine()
         {
             MagickImage img = m_curImg;
             int w = m_sc.Panel2.Width;
@@ -840,6 +709,44 @@ namespace GUI
             Node root = BuildTree(dt);
             renderTree(root);
         }
+        
+        DataTable GetData()
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("type", typeof(char));
+            dt.Columns.Add("size", typeof(UInt64));
+            dt.Columns.Add("name", typeof(string));
+
+            System.IO.StreamReader rd = System.IO.File.OpenText(@"C:\tmp\log2.txt");
+
+            string[] txt = {
+                @"F 2415 D:\.Trash-1000\files\backupsettings.conf",
+                @"F 28018176 D:\.Trash - 1000\files\BHome3388.exe",
+                @"F 53082 D:\.Trash - 1000\files\brse.odt",
+                @"F 16645 D:\.Trash - 1000\files\KhiemNV - CV - 20140429.docx",
+                @"F 108886 D:\.Trash - 1000\files\KhiemNV.CV.pdf",
+                @"D 0 D:\.Trash - 1000\files\linux",
+            };
+
+            txt = File.ReadAllLines(@"C:\tmp\log2.txt");
+
+            for (int j = 0; j < txt.Length - 1; j++)
+            {
+                string line = txt[j];
+
+                UInt64 size = 0;
+                int i;
+                for (i = 2; i < line.Length; i++)
+                {
+                    if (line[i] == ' ') { i++; break; }
+                    size = (size * 10) + line[i] - '0';
+                }
+                dt.Rows.Add(new object[] { line[0], size, line.Substring(i) });
+            }
+
+            //rd.Close();
+            return dt;
+        }
 
         private void Tree_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
@@ -853,6 +760,21 @@ namespace GUI
             proc.StartInfo.Verb = "open";
             proc.Start();
         }
-
+                MagickImage m_curImg;
+        void DisplayImagine(string path)
+        {
+            try
+            {
+                MagickImage img = new MagickImage(path);
+                m_curImg = img;
+                img.Format = MagickFormat.Bmp;
+                //img.Rotate(90);
+                DisplayCurImagine();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+            }
+        }
     }
 }
