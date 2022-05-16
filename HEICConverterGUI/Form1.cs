@@ -1,6 +1,4 @@
-﻿#define use_progress_bar
-
-using ImageMagick;
+﻿using ImageMagick;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,7 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.Threading;
-using OpenCvSharp;
+using System.Collections.Concurrent;
 
 namespace GUI
 {
@@ -99,11 +97,149 @@ namespace GUI
 #endif
 
             m_pb = new PictureBox();
+            m_pb.MouseWheel += M_pb_MouseWheel;
+            m_pb.MouseDown += M_pb_MouseDown;
+            m_pb.MouseMove += M_pb_MouseMove;
+            m_pb.MouseUp += M_pb_MouseUp;
             //m_pb.Dock = DockStyle.Fill;
             m_sc.Panel2.Controls.Add(m_pb);
 
             this.Controls.Add(m_menu);
 
+            Load += Form1_Load;
+            AllowDrop = true;
+            DragEnter += Form1_DragEnter;
+            DragDrop += Form1_DragDrop;
+        }
+
+        private void Form1_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+        }
+
+        private void Form1_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            UInt64 size = 0;
+            m_nodeDict.Clear();
+            foreach (string file in files)
+            {
+                size += addFileFolder(file);
+            }
+            if (size > 0)
+            {
+                renderTree(m_nodeDict.Values.ElementAt(0));
+                Display1st();
+            }
+        }
+
+        private Boolean canMove = false;
+        private int prevY;
+        private int prevX;
+        private int threshHold = 5;
+
+        class median
+        {
+            Queue<int> q;
+            private int maxCount = 5;
+            public median()
+            {
+                reset();
+            }
+            public void reset()
+            {
+                q = new Queue<int>();
+            }
+            public void push(int v)
+            {
+                q.Enqueue(v);
+                if(q.Count > maxCount)
+                {
+                    q.Dequeue();
+                }
+            }
+            public int calc()
+            {
+                var b = q.ToList();
+                b.Sort();
+                
+                return b[b.Count/2];
+            }
+        }
+
+        private median aX = new median();
+        private median aY = new median();
+        private void M_pb_MouseUp(object sender, MouseEventArgs e)
+        {
+            canMove = false;
+        }
+
+        private void M_pb_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (canMove)
+            {
+                //Debug.WriteLine(String.Format("X: {0} Y:{1}", e.X, e.Y));
+                aX.push(e.X);
+                aY.push(e.Y);
+                var mY = aY.calc();
+                var mX = aX.calc();
+                if (Math.Abs(mY - prevY) > threshHold)
+                {
+                    m_pb.Top += mY - prevY;
+                    prevY = mY;
+                }
+                if (Math.Abs(mX - prevX) > threshHold)
+                {
+                    m_pb.Left += mX - prevX;
+                    prevX = mX;
+                }
+            }
+        }
+
+        private void M_pb_MouseDown(object sender, MouseEventArgs e)
+        {
+            canMove = true;
+            prevY = e.Y;
+            prevX = e.X;
+            aX.reset();
+            aY.reset();
+        }
+
+        private void M_pb_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (e.Delta > 0)
+            {
+                ZoomInOut(true);
+            }
+            else
+            {
+                ZoomInOut(false);
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            this.Text = "HEIC";
+            Bitmap bitmap = (Bitmap)Image.FromFile(@"..\..\..\icon.ico");
+            Icon = Icon.FromHandle(bitmap.GetHicon());
+            if (Program.g_args.Length > 0) {
+                var size = addFileFolder(Program.g_args[0]);
+                if (size > 0)
+                {
+                    renderTree(m_nodeDict.Values.ElementAt(0));
+                    Display1st();
+                }
+            }
+        }
+        void Display1st()
+        {
+            var node = m_tree.Nodes[0];
+            while (node.Nodes.Count != 0)
+            {
+                node = node.Nodes[0];
+            }
+            DisplayImagine((string)node.Tag);
         }
 
         private void RRight_Click(object sender, EventArgs e)
@@ -118,6 +254,27 @@ namespace GUI
             if (m_curImg == null) return;
             m_curImg.Rotate(270);
             DisplayCurImagine();
+        }
+        private void ZoomInOut(bool zoom)
+        {
+            //Zoom ratio by which the images will be zoomed by default
+            int zoomRatio = 10;
+            //Set the zoomed width and height
+            int widthZoom = m_pb.Width * zoomRatio / 100;
+            int heightZoom = m_pb.Height * zoomRatio / 100;
+            //zoom = true --> zoom in
+            //zoom = false --> zoom out
+            if (!zoom)
+            {
+                widthZoom *= -1;
+                heightZoom *= -1;
+            }
+            //Add the width and height to the picture box dimensions
+            m_pb.Width += widthZoom;
+            m_pb.Height += heightZoom;
+            m_pb.Top -= heightZoom / 2;
+            m_pb.Left -= widthZoom / 2;
+
         }
 
         private void M_bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -149,35 +306,56 @@ namespace GUI
         private void M_bw_DoWork(object sender, DoWorkEventArgs e)
         {
             BWParam par = (BWParam)e.Argument;
+            SpinLock spinLock = new SpinLock();
             int i = 0;
-            foreach (string file in par.selected)
+            var dict = new HashSet<string>();
+            var arr = par.selected.ToArray();
+            var arr2 = Array.ConvertAll(arr, file =>
             {
+
                 string relPath = Path.GetDirectoryName(file.Substring(m_srcDir.Length + 1));
+                string newDir = Path.Combine(par.desDir, relPath);
+                if (!dict.Contains(newDir))
+                {
+                    if (!Directory.Exists(newDir))
+                    {
+                        Directory.CreateDirectory(newDir);
+                    }
+                    dict.Add(newDir);
+                }
                 string fileName = Path.GetFileNameWithoutExtension(file);
                 string newFile = Path.Combine(par.desDir, relPath, fileName + ".jpg");
-                //Path.GetFileNameWithoutExtension(par.desDir + file.Substring(par.srcDir.Length)) + ".jpg"
-                string newDir = Path.Combine(par.desDir, relPath);
-                if (!Directory.Exists(newDir))
+                return newFile;
+            });
+            var rangePartitioner = Partitioner.Create(0, arr.Length);
+            Parallel.ForEach(rangePartitioner, (range, loopState) =>
+            {
+                // Loop over each range element without a delegate invocation.
+                for (int index = range.Item1; index < range.Item2; index++)
                 {
-                    Directory.CreateDirectory(newDir);
-                }
-
-                try
-                {
+                    var file = arr[index];
+                    var newFile = arr2[index];
                     exportToJpg(file, newFile);
-                }
-                catch (Exception err)
-                {
-                    Debug.WriteLine(err.Message);
-                }
-
-                i++;
+                    bool lockTaken = false;
+                    try
+                    {
+                        spinLock.Enter(ref lockTaken);
+                        i++;
+                        Debug.WriteLine("{0} {1}", index, i);
 #if use_progress_bar
                 m_bw.ReportProgress(i * 100 / par.selected.Count);
 #else
-                m_bw.ReportProgress(i);
+                        m_bw.ReportProgress(i);
 #endif
-            }
+                    }
+                    finally
+                    {
+                        if (lockTaken) spinLock.Exit();
+                    }
+
+
+                }
+            });
 #if use_progress_bar
             //delay to show progressbar 100%
             m_bw.ReportProgress(100);
@@ -228,19 +406,9 @@ namespace GUI
         {
             //Thread.Sleep(1000);
             //return;
-            try
+            using (MagickImage image = new MagickImage(srcFile))
             {
-                if (File.Exists(newFile))
-                {
-                    return;
-                }
-
-                MagickImage image = new MagickImage(srcFile);
                 image.Write(newFile);
-            }catch(Exception e)
-            {
-                Debug.WriteLine("error {0}",srcFile);
-                Debug.WriteLine(e.Message);
             }
         }
 
@@ -331,16 +499,30 @@ namespace GUI
 #endif
         }
 
+        UInt64 addFileFolder(string path)
+        {
+            if (Directory.Exists(path))
+            {
+                return addFolder(path);
+            } 
+            else if (File.Exists(path) && Path.GetExtension(path).ToLower() == ".heic")
+            {
+                var fi = new FileInfo(path);
+                var size = (UInt64)fi.Length;
+                addRow('F', (UInt64)fi.Length, path, Path.GetDirectoryName(path));
+                return size;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         UInt64 addFolder(string path)
         {
             UInt64 size = 0;
-            var lst = new List<string>();
             foreach (string file in Directory.GetFiles(path, "*.heic"))
             {
-                lst.Add(file);
-            }
-            lst.Sort();
-            foreach(string file in lst) {
                 var fi = new FileInfo(file);
                 size += (UInt64)fi.Length;
                 addRow('F', (UInt64)fi.Length, file, m_srcDir);
@@ -412,20 +594,11 @@ namespace GUI
         MagickImage m_curImg;
         void DisplayImagine(string path)
         {
-            Mat src = new Mat(path,ImreadModes.Color);
-            var bitMap = src.SaveImage(@"C:\temp\conv\test.png");
-            return ;
-            //try
-            //{
-            //    MagickImage img = new MagickImage(path);
-            //    m_curImg = img;
-            //    img.Format = MagickFormat.Bmp;
-            //    //img.Rotate(90);
-            //    DisplayCurImagine();
-            //}catch(Exception e)
-            //{
-            //    Debug.WriteLine(e.Message);
-            //}
+            MagickImage img = new MagickImage(path);
+            m_curImg = img;
+            img.Format = MagickFormat.Bmp;
+            //img.Rotate(90);
+            DisplayCurImagine();
         }
         void DisplayCurImagine()
         {
@@ -750,10 +923,10 @@ namespace GUI
                 {
                     // 0,1 - offset the checkbox slightly so it positions in the correct place
                     case 0:
-                        RadioButtonRenderer.DrawRadioButton(chkGraphics, new System.Drawing.Point(0, 1), System.Windows.Forms.VisualStyles.RadioButtonState.UncheckedNormal);
+                        RadioButtonRenderer.DrawRadioButton(chkGraphics, new Point(0, 1), System.Windows.Forms.VisualStyles.RadioButtonState.UncheckedNormal);
                         break;
                     case 1:
-                        RadioButtonRenderer.DrawRadioButton(chkGraphics, new System.Drawing.Point(0, 1), System.Windows.Forms.VisualStyles.RadioButtonState.CheckedNormal);
+                        RadioButtonRenderer.DrawRadioButton(chkGraphics, new Point(0, 1), System.Windows.Forms.VisualStyles.RadioButtonState.CheckedNormal);
                         break;
                 }
 
