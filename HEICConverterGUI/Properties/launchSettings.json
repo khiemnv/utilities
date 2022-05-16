@@ -2,7 +2,7 @@
   "profiles": {
     "GUI": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\tmp\\utilities\\HEICConverterGUI.backup\\IMG_0020.HEIC\"",
+      "commandLineArgs": "\"..\\..\\..\\IMG_0020.HEIC\"",
       "nativeDebugging": false
     }
   }

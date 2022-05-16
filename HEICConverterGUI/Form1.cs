@@ -34,7 +34,7 @@ namespace GUI
             m_menu.Items.Add(file);
             ToolStripMenuItem open = new ToolStripMenuItem("&Open");
             file.DropDownItems.Add (open);
-            ToolStripMenuItem export = new ToolStripMenuItem("&Export");
+            ToolStripMenuItem export = new ToolStripMenuItem("&Export(JPG)");
             file.DropDownItems.Add(export);
             //ToolStripMenuItem refresh = new ToolStripMenuItem("&Refresh");
             //m_menu.Items.Add(refresh);
@@ -224,7 +224,8 @@ namespace GUI
             Bitmap bitmap = (Bitmap)Image.FromFile(@"..\..\..\icon.ico");
             Icon = Icon.FromHandle(bitmap.GetHicon());
             if (Program.g_args.Length > 0) {
-                var size = addFileFolder(Program.g_args[0]);
+                var path = Path.GetFullPath(Program.g_args[0]);
+                var size = addFileFolder(path);
                 if (size > 0)
                 {
                     renderTree(m_nodeDict.Values.ElementAt(0));
