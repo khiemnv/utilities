@@ -221,8 +221,15 @@ namespace GUI
         private void Form1_Load(object sender, EventArgs e)
         {
             this.Text = "HEIC";
-            Bitmap bitmap = (Bitmap)Image.FromFile(@"..\..\..\icon.ico");
-            Icon = Icon.FromHandle(bitmap.GetHicon());
+            try
+            {
+                Bitmap bitmap = (Bitmap)Image.FromFile(@"..\..\..\icon.ico");
+                Icon = Icon.FromHandle(bitmap.GetHicon());
+            }
+            catch
+            {
+
+            }
             if (Program.g_args.Length > 0) {
                 var path = Path.GetFullPath(Program.g_args[0]);
                 var size = addFileFolder(path);
