@@ -1,42 +1,56 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Text.RegularExpressions;
-using System.Xml;
 
 // get all data
 var url=@"https://japan-postcode.810popo.net/hokkaido/";
 url=@"https://japan-postcode.810popo.net/aichiken/";
-HttpClient client = new HttpClient();
-var p = new Prefecture();
-try
-{
-    string responseBody = await Common.DownLoad(url, client);
-    var n = Regex.Match(responseBody, @"ZIP code of (\w+) Prefecture");
-    p.name = n.Groups[1].Value;
-    var lst = Regex.Matches(responseBody, @"<li><a itemprop='url' href='(\w+\/)'><span itemprop='name'>(\w+)<\/span><\/a><\/li>", RegexOptions.Multiline);
-    foreach (Match m in lst)
-    {
-        var url2 = url + m.Groups[1].Value;
-        var name2 = m.Groups[2].Value;
-        var city = new City { name = name2 };
-        p.Citys.Add(city);
 
-        string responseBody2 = await Common.DownLoad(url2, client);
-        var lst2 = Regex.Matches(responseBody2, @"<span itemprop='name'>(\w+)</span>", RegexOptions.Multiline);
-        foreach(Match m2 in lst2)
-        {
-            var name3 = m2.Groups[1].Value;
-            var town = new City.Town { name=name3};
-            city.towns.Add(town);
-        }
-    }
-    var fileOut = $"{p.name}.txt";
-    Common.printCitys(p.Citys, fileOut);
+if (args.Length == 0) {
+    Console.WriteLine("cmd <perf,perf>");
+    return;
 }
-catch (HttpRequestException e)
+
+HttpClient client = new HttpClient();
+var arr = args[0].Split(new char[] { ',', ' '});
+var perfs = new List<Prefecture>();
+foreach (var perf in arr)
 {
-    Console.WriteLine("\nException Caught!");
-    Console.WriteLine("Message :{0} ", e.Message);
+    url = $@"https://japan-postcode.810popo.net/{perf}/";
+    var p = new Prefecture();
+    try
+    {
+        string responseBody = await Common.DownLoad(url, client);
+        var n = Regex.Match(responseBody, @"ZIP code of (\w+) Prefecture");
+        p.name = n.Groups[1].Value;
+        var lst = Regex.Matches(responseBody, @"<li><a itemprop='url' href='(\w+\/)'><span itemprop='name'>(\w+)<\/span><\/a><\/li>", RegexOptions.Multiline);
+        foreach (Match m in lst)
+        {
+            var url2 = url + m.Groups[1].Value;
+            var name2 = m.Groups[2].Value;
+            var city = new City { name = name2 };
+            p.Cities.Add(city);
+
+            string responseBody2 = await Common.DownLoad(url2, client);
+            var lst2 = Regex.Matches(responseBody2, @"<span itemprop='name'>(\w+)</span>", RegexOptions.Multiline);
+            foreach(Match m2 in lst2)
+            {
+                var name3 = m2.Groups[1].Value;
+                var town = new City.Town { name=name3};
+                city.towns.Add(town);
+            }
+        }
+        perfs.Add(p);
+    }
+    catch (HttpRequestException e)
+    {
+        Console.WriteLine("\nException Caught!");
+        Console.WriteLine("Message :{0} ", e.Message);
+    }
 }
+
+var path = string.Join('_', arr) + ".txt";
+Common.printPefs(perfs, path);
+
 return;
 
 
@@ -71,7 +85,7 @@ foreach (var line in lines)
 class Prefecture
 {
     public string name;
-    public List<City> Citys = new List<City>();
+    public List<City> Cities = new List<City>();
 }
 class City
 {
@@ -86,6 +100,22 @@ class City
 
 class Common
 {
+    public static void printPefs(List<Prefecture> perfs, string path)
+    {
+        var lines = new List<string>();
+        var n = 1;
+        perfs.ForEach(p =>
+        {
+            lines.Add($"{n}. Tỉnh {p.name}");
+            foreach (var city in p.Cities)
+            {
+                var txt = string.Join(", ", city.towns.Select(x => "Thị trấn " + x.name).ToList());
+                lines.Add($"  + Thành phố {city.name}: {txt}");
+            }
+            n++;
+        });
+        File.WriteAllLines(path, lines);
+    }
     public static void printCitys(List<City> cities, string path)
     {
         // print
