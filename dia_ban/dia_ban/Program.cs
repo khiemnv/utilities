@@ -2,16 +2,16 @@
 using System.Text.RegularExpressions;
 
 // get all data
-var url=@"https://japan-postcode.810popo.net/hokkaido/";
-url=@"https://japan-postcode.810popo.net/aichiken/";
+var url = @"https://japan-postcode.810popo.net/hokkaido/";
 
-if (args.Length == 0) {
+if (args.Length == 0)
+{
     Console.WriteLine("cmd <perf,perf>");
     return;
 }
 
 HttpClient client = new HttpClient();
-var arr = args[0].Split(new char[] { ',', ' '});
+var arr = args[0].Split(new char[] { ',', ' ' });
 var perfs = new List<Prefecture>();
 foreach (var perf in arr)
 {
@@ -32,10 +32,10 @@ foreach (var perf in arr)
 
             string responseBody2 = await Common.DownLoad(url2, client);
             var lst2 = Regex.Matches(responseBody2, @"<span itemprop='name'>(\w+)</span>", RegexOptions.Multiline);
-            foreach(Match m2 in lst2)
+            foreach (Match m2 in lst2)
             {
                 var name3 = m2.Groups[1].Value;
-                var town = new City.Town { name=name3};
+                var town = new City.Town { name = name3 };
                 city.towns.Add(town);
             }
         }
@@ -56,7 +56,7 @@ return;
 
 var file = @"D:\tmp\github\clb\data_hokkaido.txt";
 var lines = File.ReadAllLines(file);
-var s=0;
+var s = 0;
 var citys = new List<City>();
 City curCity = new City();
 foreach (var line in lines)
@@ -64,14 +64,14 @@ foreach (var line in lines)
     switch (s)
     {
         case 0:
-            var m0=Regex.Match(line, @"All Towns and ZIP codes in (\w+)");
+            var m0 = Regex.Match(line, @"All Towns and ZIP codes in (\w+)");
             if (m0.Success)
             {
                 curCity = new City { name = m0.Groups[0].Value };
                 citys.Add(curCity);
                 break;
             }
-            
+
             var m1 = Regex.Match(line, @"(\w+) : (〒\d+-\d+)");
             if (m1.Success)
             {
@@ -84,17 +84,17 @@ foreach (var line in lines)
 
 class Prefecture
 {
-    public string name;
+    public string name = "";
     public List<City> Cities = new List<City>();
 }
 class City
 {
     public class Town
     {
-        public string name;
-        public string code;
+        public string name = "";
+        public string code = "";
     }
-    public string name;
+    public string name = "";
     public List<Town> towns = new List<Town>();
 }
 
@@ -127,17 +127,17 @@ class Common
         }
         fout.Close();
     }
-    public static async Task<string> DownLoad(string url, HttpClient client)
+    public static async Task<string> DownLoad(string url, HttpClient client, string tmpDir = "download")
     {
-        var filePath = new Uri(url).LocalPath.Trim('/').Replace("/","_") + ".html";
+        if (!Directory.Exists(tmpDir)) { Directory.CreateDirectory(tmpDir); }
+        var fileName = new Uri(url).LocalPath.Trim('/').Replace("/", "_") + ".html";
+        var filePath = Path.Combine(tmpDir, fileName);
         string responseBody = "";
         if (!File.Exists(filePath))
         {
             using HttpResponseMessage response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             responseBody = await response.Content.ReadAsStringAsync();
-            // Above three lines can be replaced with new helper method below
-            // string responseBody = await client.GetStringAsync(uri);
             File.WriteAllText(filePath, responseBody);
         }
         else
