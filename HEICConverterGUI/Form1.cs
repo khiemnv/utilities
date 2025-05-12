@@ -321,8 +321,8 @@ namespace GUI
             var arr2 = Array.ConvertAll(arr, file =>
             {
 
-                string relPath = Path.GetDirectoryName(file.Substring(m_srcDir.Length + 1));
-                string newDir = Path.Combine(par.desDir, relPath);
+                string relPath = string.IsNullOrEmpty(m_srcDir)?"": Path.GetDirectoryName(file.Substring(m_srcDir.Length + 1));
+                string newDir = string.IsNullOrEmpty(relPath)?par.desDir: Path.Combine(par.desDir, relPath);
                 if (!dict.Contains(newDir))
                 {
                     if (!Directory.Exists(newDir))
